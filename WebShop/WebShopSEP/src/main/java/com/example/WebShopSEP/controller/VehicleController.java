@@ -7,6 +7,7 @@ import com.example.WebShopSEP.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,12 +39,14 @@ public class VehicleController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PostMapping
     public ResponseEntity<VehicleResponseDTO> createVehicle(@RequestBody VehicleCreateDTO vehicleCreateDTO) {
         VehicleResponseDTO createdVehicle = vehicleService.save(vehicleCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdVehicle);
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
     public ResponseEntity<VehicleResponseDTO> updateVehicle(@PathVariable Integer id, @RequestBody VehicleUpdateDTO vehicleUpdateDTO) {
         try {
@@ -54,6 +57,7 @@ public class VehicleController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVehicle(@PathVariable Integer id) {
         try {

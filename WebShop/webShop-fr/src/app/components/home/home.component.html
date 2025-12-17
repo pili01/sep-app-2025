@@ -1,0 +1,184 @@
+<div class="home-container">
+  <div class="home-header">
+    <div class="header-content">
+      <h1>Upravljanje vozilima</h1>
+      <p>Pregledajte, dodajte, izmjenite ili obrišite vozila</p>
+    </div>
+    <button type="button" class="add-button" (click)="openAddModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Dodaj vozilo</span>
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="success-alert">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Učitavanje vozila...</p>
+  </div>
+
+  <div *ngIf="!isLoading && vehicles.length === 0" class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+      <polyline points="12 15 17 21 7 21 12 15"></polyline>
+    </svg>
+    <h2>Nema vozila</h2>
+    <p>Dodajte prvo vozilo</p>
+    <button type="button" class="add-button" (click)="openAddModal()">
+      <svg width="20" style="margin: auto !important;" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Dodaj vozilo</span>
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading && vehicles.length > 0" class="vehicles-grid">
+    <div *ngFor="let vehicle of vehicles; trackBy: trackByVehicleId" class="vehicle-card">
+      <div class="vehicle-image">
+        <img *ngIf="vehicle.pictureUrl && isDirectImageUrl(vehicle.pictureUrl)" 
+          [src]="vehicle.pictureUrl" 
+          [alt]="vehicle.type"
+          (error)="onImageError($event)">
+        <div *ngIf="!vehicle.pictureUrl || !isDirectImageUrl(vehicle.pictureUrl)" class="placeholder-image">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+            <polyline points="12 15 17 21 7 21 12 15"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="vehicle-content">
+        <h3 class="vehicle-type">{{ vehicle.type }}</h3>
+        <div class="vehicle-details">
+          <div class="detail-item">
+            <span class="detail-label">Registracija:</span>
+            <span class="detail-value">{{ vehicle.registration }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Broj šasije:</span>
+            <span class="detail-value">{{ vehicle.chassisNumber }}</span>
+          </div>
+          <div class="detail-item price">
+            <span class="detail-label">Cena po danu:</span>
+            <span class="detail-value">{{ vehicle.pricePerDay | number:'1.2-2' }} €</span>
+          </div>
+        </div>
+      </div>
+      <div class="vehicle-actions">
+        <button type="button" class="action-btn edit-btn" (click)="openEditModal(vehicle)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>Izmeni</span>
+        </button>
+        <button type="button" class="action-btn delete-btn" (click)="deleteVehicle(vehicle.id!)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Obriši</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal za dodavanje/izmenu vozila -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Izmeni vozilo' : 'Dodaj novo vozilo' }}</h2>
+        <button type="button" class="close-button" (click)="closeModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="vehicleForm" (ngSubmit)="onSubmit()" class="vehicle-form">
+        <div class="form-group">
+          <label for="type">Tip vozila *</label>
+          <input type="text" id="type" formControlName="type" placeholder="npr. Sedan, SUV, Hatchback..."
+            [class.error]="type?.invalid && type?.touched" />
+          <span *ngIf="type?.invalid && type?.touched" class="error-message">
+            <span *ngIf="type?.errors?.['required']">Tip vozila je obavezan</span>
+            <span *ngIf="type?.errors?.['minlength'] && !type?.errors?.['required']">Tip vozila mora imati najmanje 2
+              karaktera</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="registration">Registracija *</label>
+          <input type="text" id="registration" formControlName="registration" placeholder="npr. AB-123-CD"
+            [class.error]="registration?.invalid && registration?.touched" />
+          <span *ngIf="registration?.invalid && registration?.touched" class="error-message">
+            <span *ngIf="registration?.errors?.['required']">Registracija je obavezna</span>
+            <span *ngIf="registration?.errors?.['minlength'] && !registration?.errors?.['required']">Registracija mora
+              imati najmanje 2 karaktera</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="chassisNumber">Broj šasije *</label>
+          <input type="text" id="chassisNumber" formControlName="chassisNumber" placeholder="Broj šasije"
+            [class.error]="chassisNumber?.invalid && chassisNumber?.touched" />
+          <span *ngIf="chassisNumber?.invalid && chassisNumber?.touched" class="error-message">
+            <span *ngIf="chassisNumber?.errors?.['required']">Broj šasije je obavezan</span>
+            <span *ngIf="chassisNumber?.errors?.['minlength'] && !chassisNumber?.errors?.['required']">Broj šasije mora
+              imati najmanje 2 karaktera</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="pricePerDay">Cena po danu (€) *</label>
+          <input type="number" id="pricePerDay" formControlName="pricePerDay" placeholder="0.00" step="0.01" min="0.01"
+            [class.error]="pricePerDay?.invalid && pricePerDay?.touched" />
+          <span *ngIf="pricePerDay?.invalid && pricePerDay?.touched" class="error-message">
+            <span *ngIf="pricePerDay?.errors?.['required']">Cena je obavezna</span>
+            <span *ngIf="pricePerDay?.errors?.['min'] && !pricePerDay?.errors?.['required']">Cena mora biti veća od
+              0</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="pictureUrl">URL slike</label>
+          <input type="url" id="pictureUrl" formControlName="pictureUrl" placeholder="https://example.com/image.jpg" />
+          <span class="hint">Opciono - URL slike vozila</span>
+        </div>
+
+        <div *ngIf="errorMessage" class="error-alert">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="success-alert">
+          {{ successMessage }}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-button" (click)="closeModal()" [disabled]="isLoading">
+            Otkaži
+          </button>
+          <button type="submit" class="submit-button" [disabled]="isLoading || vehicleForm.invalid">
+            <span *ngIf="isLoading">
+              <span class="spinner"></span>
+              {{ isEditMode ? 'Čuvanje...' : 'Kreiranje...' }}
+            </span>
+            <span *ngIf="!isLoading">
+              {{ isEditMode ? 'Sačuvaj izmene' : 'Kreiraj vozilo' }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -5,8 +5,10 @@ import com.example.WebShopSEP.dto.equipment.EquipmentResponseDTO;
 import com.example.WebShopSEP.dto.equipment.EquipmentUpdateDTO;
 import com.example.WebShopSEP.service.EquipmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,12 +40,14 @@ public class EquipmentController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PostMapping
     public ResponseEntity<EquipmentResponseDTO> createEquipment(@RequestBody EquipmentCreateDTO equipmentCreateDTO) {
         EquipmentResponseDTO createdEquipment = equipmentService.save(equipmentCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipment);
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
     public ResponseEntity<EquipmentResponseDTO> updateEquipment(@PathVariable Integer id, @RequestBody EquipmentUpdateDTO equipmentUpdateDTO) {
         try {
@@ -54,6 +58,7 @@ public class EquipmentController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEquipment(@PathVariable Integer id) {
         try {

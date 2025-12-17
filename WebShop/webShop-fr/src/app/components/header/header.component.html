@@ -1,0 +1,96 @@
+<header class="header">
+  <div class="header-container">
+    <div class="header-left">
+      <a [routerLink]="authService.isAuthenticated() ? (authService.isAuthor() ? '/home' : '/customer-home') : '/login'" class="logo-link">
+        <div class="logo">
+          <img src="/assets/icons/web_icon.png" style="width: 72px; height: 72px;" alt="WebShop Icon" onerror="this.style.display='none'">
+        </div>
+        <span class="logo-text">ĐIR</span>
+      </a>
+    </div>
+
+    <nav class="header-nav" [class.menu-open]="isMenuOpen">
+      @if (authService.isAuthenticated()) {
+        @if (authService.isAuthor()) {
+          <a routerLink="/home" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Vozila</span>
+          </a>
+          <a routerLink="/equipment" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a1 1 0 0 0-1 1v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"></path>
+            </svg>
+            <span>Oprema</span>
+          </a>
+          <a routerLink="/insurance" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Osiguranje</span>
+          </a>
+          <a routerLink="/all-rentals" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>Sva iznajmljivanja</span>
+          </a>
+        } @else {
+          <a routerLink="/customer-home" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Početna</span>
+          </a>
+          <a routerLink="/my-rentals" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>Moja iznajmljivanja</span>
+          </a>
+        }
+        <a routerLink="/profile" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Profil</span>
+        </a>
+        <button type="button" class="nav-link logout-btn" (click)="logout(); closeMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Odjavi se</span>
+        </button>
+      } @else {
+        <a routerLink="/login" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+          <span>Prijavi se</span>
+        </a>
+        <a routerLink="/register" routerLinkActive="active" class="nav-link" (click)="closeMenu()">
+          <span>Registruj se</span>
+        </a>
+      }
+    </nav>
+
+    <button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        @if (!isMenuOpen) {
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        } @else {
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        }
+      </svg>
+    </button>
+  </div>
+</header>
+

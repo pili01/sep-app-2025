@@ -1,5 +1,6 @@
 package com.example.WebShopSEP.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ public class Equipment {
     @Column(name = "price_per_day", nullable = false)
     private Double pricePerDay;
 
-    @ManyToMany(mappedBy = "equipment")
+    @ManyToMany(mappedBy = "equipment", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Rental> rentals = new HashSet<>();
 }

@@ -7,6 +7,7 @@ import com.example.WebShopSEP.service.InsuranceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,12 +39,14 @@ public class InsuranceController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PostMapping
     public ResponseEntity<InsuranceResponseDTO> createInsurance(@RequestBody InsuranceCreateDTO insuranceCreateDTO) {
         InsuranceResponseDTO createdInsurance = insuranceService.save(insuranceCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdInsurance);
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
     public ResponseEntity<InsuranceResponseDTO> updateInsurance(@PathVariable Integer id, @RequestBody InsuranceUpdateDTO insuranceUpdateDTO) {
         try {
@@ -54,6 +57,7 @@ public class InsuranceController {
         }
     }
 
+    @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInsurance(@PathVariable Integer id) {
         try {

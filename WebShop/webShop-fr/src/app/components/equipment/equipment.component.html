@@ -1,0 +1,132 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>Upravljanje opremom</h1>
+      <p>Pregledajte, dodajte, izmenite ili obrišite opremu</p>
+    </div>
+    <button type="button" class="add-button" (click)="openAddModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Dodaj opremu</span>
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="success-alert">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Učitavanje opreme...</p>
+  </div>
+
+  <div *ngIf="!isLoading && equipmentList.length === 0" class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+      <polyline points="12 15 17 21 7 21 12 15"></polyline>
+    </svg>
+    <h2>Nema opreme</h2>
+    <p>Dodajte prvo opremu</p>
+    <button type="button" class="add-button" (click)="openAddModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" style="margin: auto !important;" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Dodaj opremu</span>
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading && equipmentList.length > 0" class="items-grid">
+    <div *ngFor="let equipment of equipmentList" class="item-card">
+      <div class="item-content">
+        <h3 class="item-name">{{ equipment.name }}</h3>
+        <p class="item-description" *ngIf="equipment.description">{{ equipment.description }}</p>
+        <div class="item-price">
+          <span class="price-label">Cena po danu:</span>
+          <span class="price-value">{{ equipment.pricePerDay | number:'1.2-2' }} €</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <button type="button" class="action-btn edit-btn" (click)="openEditModal(equipment)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>Izmeni</span>
+        </button>
+        <button type="button" class="action-btn delete-btn" (click)="deleteEquipment(equipment.id!)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Obriši</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Izmeni opremu' : 'Dodaj novu opremu' }}</h2>
+        <button type="button" class="close-button" (click)="closeModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="equipmentForm" (ngSubmit)="onSubmit()" class="item-form">
+        <div class="form-group">
+          <label for="name">Naziv opreme *</label>
+          <input type="text" id="name" formControlName="name" placeholder="npr. GPS navigacija"
+            [class.error]="name?.invalid && name?.touched" />
+          <span *ngIf="name?.invalid && name?.touched" class="error-message">
+            <span *ngIf="name?.errors?.['required']">Naziv je obavezan</span>
+            <span *ngIf="name?.errors?.['minlength'] && !name?.errors?.['required']">Naziv mora imati najmanje 2 karaktera</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Opis</label>
+          <textarea id="description" formControlName="description" rows="3"
+            placeholder="Opis opreme (opciono)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="pricePerDay">Cena po danu (€) *</label>
+          <input type="number" id="pricePerDay" formControlName="pricePerDay" placeholder="0.00"
+            step="0.01" min="0.01" [class.error]="pricePerDay?.invalid && pricePerDay?.touched" />
+          <span *ngIf="pricePerDay?.invalid && pricePerDay?.touched" class="error-message">
+            <span *ngIf="pricePerDay?.errors?.['required']">Cena je obavezna</span>
+            <span *ngIf="pricePerDay?.errors?.['min'] && !pricePerDay?.errors?.['required']">Cena mora biti veća od 0</span>
+          </span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-button" (click)="closeModal()" [disabled]="isLoading">
+            Otkaži
+          </button>
+          <button type="submit" class="submit-button" [disabled]="isLoading || equipmentForm.invalid">
+            <span *ngIf="isLoading">
+              <span class="spinner"></span>
+              {{ isEditMode ? 'Čuvanje...' : 'Kreiranje...' }}
+            </span>
+            <span *ngIf="!isLoading">
+              {{ isEditMode ? 'Sačuvaj izmene' : 'Kreiraj opremu' }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
