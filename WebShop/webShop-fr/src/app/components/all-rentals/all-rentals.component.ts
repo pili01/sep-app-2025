@@ -105,8 +105,8 @@ export class AllRentalsComponent implements OnInit {
 
   getUserName(user: any): string {
     if (!user) return 'Nepoznato';
-    if (user.name && user.surname) {
-      return `${user.name} ${user.surname}`;
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
     }
     return user.email || 'Nepoznato';
   }

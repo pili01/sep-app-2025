@@ -72,6 +72,7 @@ public class RentalService {
         List<Rental> rentals = rentalRepository.findByUser(user);
         List<RentalDto> rentalDtos = new ArrayList<>();
         for (Rental rental : rentals) {
+            Hibernate.initialize(rental.getEquipment()); // Initialize lazy-loaded equipment
             rentalDtos.add(modelMapper.map(rental, RentalDto.class));
         }
         return rentalDtos;
@@ -79,7 +80,7 @@ public class RentalService {
 
     @Transactional(readOnly = true)
     public List<RentalDto> getAllRentals() {
-        List<Rental> rentals = rentalRepository.findAllForAuthor();
+        List<Rental> rentals = rentalRepository.findAll();
         List<RentalDto> rentalDtos = new ArrayList<>();
         for (Rental rental : rentals) {
             rentalDtos.add(modelMapper.map(rental, RentalDto.class));

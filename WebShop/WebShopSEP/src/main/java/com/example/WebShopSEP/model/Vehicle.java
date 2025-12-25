@@ -1,6 +1,5 @@
 package com.example.WebShopSEP.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -34,6 +33,5 @@ public class Vehicle {
     private String pictureUrl;
 
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnore
     private List<Rental> rentals = new ArrayList<>();
 }
