@@ -7,7 +7,8 @@
 
     <div class="nav-actions">
       @if (authService.isLoggedIn()) {
-        <a routerLink="/home" class="nav-link">Dashboard</a>
+        <a routerLink="/home" class="nav-link">Home</a>
+        <a routerLink="/merchants" class="nav-link">Merchants</a>
         <button class="btn-logout" (click)="handleLogout()">
           Logout
         </button>
