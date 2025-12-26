@@ -55,4 +55,8 @@ public class MerchantService {
                         "Merchant with id " + id + " not found."
                 ));
     }
+
+    public boolean verifyCredentials(String id, String password) {
+        return merchantRepository.findByMerchantIdAndMerchantPassword(id, password).isPresent();
+    }
 }

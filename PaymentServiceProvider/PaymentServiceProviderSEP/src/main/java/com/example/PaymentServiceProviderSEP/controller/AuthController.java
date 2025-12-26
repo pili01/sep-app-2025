@@ -43,12 +43,22 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO request, HttpServletRequest httpRequest) {
-        User user = userService.authenticate(request.getEmail(), request.getPassword())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    public ResponseEntity<?> login(@RequestBody LoginDTO request) {
+        var userOptional = userService.authenticate(request.getEmail(), request.getPassword());
 
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
+        }
+
+        User user = userOptional.get();
         String token = jwtService.generateToken(user);
 
-        return ResponseEntity.ok(new LoginResponseDTO(token, user.getId(), user.getEmail(), user.getRole().toString()));
+        return ResponseEntity.ok(new LoginResponseDTO(
+                token,
+                user.getId(),
+                user.getEmail(),
+                user.getRole().toString()
+        ));
     }
 }
