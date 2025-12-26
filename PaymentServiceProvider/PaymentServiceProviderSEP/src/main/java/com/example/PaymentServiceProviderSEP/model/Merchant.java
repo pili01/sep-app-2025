@@ -15,20 +15,17 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Merchant {
-    //Pretplata web shopa na psp
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // PSP internal ID
 
-    @Column(unique = true, nullable = false)
-    @NotBlank(message = "Merchant ID is required")
+    @Column(unique = true)
     private String merchantId; // Ono što web shop dobije pri pretplati
 
-    @Column(nullable = false)
-    @NotBlank(message = "Merchant password/API key is required")
+    @Column(unique = true)
     private String merchantPassword; // Za autentifikaciju zahteva (apiKey)
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     @NotBlank(message = "Merchant name is required")
     private String name;
 

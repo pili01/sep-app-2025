@@ -1,6 +1,7 @@
 package com.example.PaymentServiceProviderSEP.jwt;
 
-//import com.example.PaymentServiceProviderSEP.model.User;
+import com.example.PaymentServiceProviderSEP.model.User;
+import com.example.PaymentServiceProviderSEP.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -23,19 +24,19 @@ public class JwtService {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-//    public String generateToken(User user) {
-//        String jti = UUID.randomUUID().toString();
-//
-//        return Jwts.builder()
-//                .id(jti)
-//                .subject(user.getEmail())
-//                .claim("userId", user.getId())
-//                .claim("role", user.getRole().name())
-//                .issuedAt(new Date())
-//                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-//                .signWith(getSigningKey())
-//                .compact();
-//    }
+    public String generateToken(User user) {
+        String jti = UUID.randomUUID().toString();
+
+        return Jwts.builder()
+                .id(jti)
+                .subject(user.getEmail())
+                .claim("userId", user.getId())
+                .claim("role", user.getRole().name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey())
+                .compact();
+    }
 
     public boolean validateToken(String token) {
         try {
