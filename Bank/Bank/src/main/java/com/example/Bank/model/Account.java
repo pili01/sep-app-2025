@@ -36,7 +36,7 @@ public class Account {
     @Column(nullable = false)
     private String currency = "EUR";
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Card> cards;
 }
