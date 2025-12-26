@@ -1,1 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --psp-blue: #1976d2;
+  --psp-dark: #0d47a1;
+  --bg-gray: #f8fafc;
+  --white: #ffffff;
+  --gray-900: oklch(19.37% 0.006 300.98);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-gray);
+  font-family: "Inter", sans-serif;
+}
+
+.main-content {
+  min-height: calc(100vh - 64px); /* Full height minus navbar */
+  display: flex;
+  flex-direction: column;
+}

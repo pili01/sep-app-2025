@@ -1,0 +1,43 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="brand-header">
+      <div class="logo-box">PSP</div>
+      <h1>Welcome Back</h1>
+      <p>Secure Payment Service Provider Portal</p>
+    </div>
+
+    <form (ngSubmit)="handleLogin()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="text" 
+          id="email" 
+          name="email" 
+          [(ngModel)]="credentials.email" 
+          required 
+          placeholder="Enter your email">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="credentials.password" 
+          required 
+          placeholder="••••••••">
+      </div>
+
+      @if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+  </div>
+}
+
+      <button type="submit" class="submit-btn" [disabled]="!loginForm.valid">
+        Sign In
+      </button>
+    </form>
+  </div>
+</div>
