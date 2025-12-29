@@ -23,9 +23,9 @@ public class MerchantClientService {
     public MerchantClientService(RestClient.Builder builder, ConfigProperties config) {
         this.config = config;
         try {
-            KeyStore trustStore = KeyStore.getInstance("PKCS12");
-            ClassPathResource resource = new ClassPathResource("keystore/webShopBe.p12");
-            char[] password = "SertifikatZaSEP2025!".toCharArray();
+            KeyStore trustStore = KeyStore.getInstance(config.getKeyStoreType());
+            ClassPathResource resource = new ClassPathResource(config.getKeyStore().replace("classpath:", ""));
+            char[] password = config.getKeyStorePassword().toCharArray();
 
             trustStore.load(resource.getInputStream(), password);
 
@@ -43,7 +43,7 @@ public class MerchantClientService {
                     .build();
 
             this.restClient = builder
-                    .baseUrl(config.getMerchantServiceUrl())
+                    .baseUrl(config.getMerchantBaseUrl())
                     .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
                     .build();
 
@@ -54,15 +54,15 @@ public class MerchantClientService {
 
     public void connectToMerchantBackend() {
         Map<String, Object> requestBody = Map.of(
-                "merchantId", config.getMyAppMerchantId(),
-                "merchantPassword", config.getMyAppMerchantPassword().toString()
+                "merchantId", config.getMerchantId(),
+                "merchantPassword", config.getMerchantPassword().toString()
         );
 
-        System.out.println("Connecting to: " + config.getMerchantServiceUrl());
+        System.out.println("Connecting to: " + config.getMerchantBaseUrl() + config.getMerchantHandshakeEndpoint());
 
         try {
             Map<String, Object> response = restClient.post()
-                    .uri("/api/merchants/handshake")
+                    .uri(config.getMerchantHandshakeEndpoint())
                     .body(requestBody)
                     .retrieve()
                     .body(Map.class);

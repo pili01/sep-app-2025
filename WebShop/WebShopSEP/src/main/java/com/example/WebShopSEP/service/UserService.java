@@ -10,9 +10,11 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final CryptoService cryptoService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, CryptoService cryptoService) {
         this.userRepository = userRepository;
+        this.cryptoService = cryptoService;
     }
 
     public User registerUser(RegisterDTO request) {
@@ -24,14 +26,14 @@ public class UserService {
         user.setName(request.getName());
         user.setSurname(request.getSurname());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(cryptoService.hashWithSalt(request.getPassword()));
         user.setRole(UserRole.CUSTOMER);
 
         return userRepository.save(user);
     }
 
-    public Optional<User> authenticate(String email, String password) {
+    public Optional<User> authenticate(String email, String rawPassword) {
         return userRepository.findByEmail(email)
-                .filter(user -> user.getPassword().equals(password));
+                .filter(user -> cryptoService.verifyHash(rawPassword, user.getPassword()));
     }
 }
