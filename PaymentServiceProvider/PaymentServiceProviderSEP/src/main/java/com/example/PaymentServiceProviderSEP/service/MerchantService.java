@@ -17,8 +17,11 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
 
-    public MerchantService(MerchantRepository merchantRepository) {
+    private final CryptoService cryptoService;
+
+    public MerchantService(MerchantRepository merchantRepository, CryptoService cryptoService) {
         this.merchantRepository = merchantRepository;
+        this.cryptoService = cryptoService;
     }
 
     @Transactional

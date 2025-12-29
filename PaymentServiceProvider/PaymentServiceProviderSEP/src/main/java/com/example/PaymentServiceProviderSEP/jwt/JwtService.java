@@ -18,7 +18,7 @@ import java.util.UUID;
 public class JwtService {
 
     private final String jwtSecret = "my-super-long-secret-key-that-is-at-least-32-bytes!";
-    private final long jwtExpirationMs = 86400000; // 1 day
+    private final long jwtExpirationMs = 86400000;
 
     public SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));

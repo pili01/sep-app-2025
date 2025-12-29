@@ -1,0 +1,81 @@
+package com.example.WebShopSEP.service;
+
+import com.example.WebShopSEP.config.ConfigProperties;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import java.security.KeyStore;
+import java.util.Map;
+
+@Service
+public class MerchantClientService {
+
+    private final RestClient restClient;
+    private final ConfigProperties config;
+
+    public MerchantClientService(RestClient.Builder builder, ConfigProperties config) {
+        this.config = config;
+        try {
+            KeyStore trustStore = KeyStore.getInstance("PKCS12");
+            ClassPathResource resource = new ClassPathResource("keystore/webShopBe.p12");
+            char[] password = "SertifikatZaSEP2025!".toCharArray();
+
+            trustStore.load(resource.getInputStream(), password);
+
+            var sslContext = SSLContextBuilder.create()
+                    .loadTrustMaterial(trustStore, new TrustSelfSignedStrategy())
+                    .build();
+
+            var httpClient = HttpClients.custom()
+                    .setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create()
+                            .setSSLSocketFactory(SSLConnectionSocketFactoryBuilder.create()
+                                    .setSslContext(sslContext)
+                                    .setHostnameVerifier((hostname, session) -> true)
+                                    .build())
+                            .build())
+                    .build();
+
+            this.restClient = builder
+                    .baseUrl(config.getMerchantServiceUrl())
+                    .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initialize secure RestClient", e);
+        }
+    }
+
+    public void connectToMerchantBackend() {
+        Map<String, Object> requestBody = Map.of(
+                "merchantId", config.getMyAppMerchantId(),
+                "merchantPassword", config.getMyAppMerchantPassword().toString()
+        );
+
+        System.out.println("Connecting to: " + config.getMerchantServiceUrl());
+
+        try {
+            Map<String, Object> response = restClient.post()
+                    .uri("/api/merchants/handshake")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null) {
+                System.out.println("--- HANDSHAKE SUCCESS ---");
+                System.out.println("Merchant Message: " + response.get("message"));
+                System.out.println("Merchant Status: " + response.get("status"));
+            }
+
+        } catch (Exception e) {
+            System.err.println("--- HANDSHAKE FAILED ---");
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+}
