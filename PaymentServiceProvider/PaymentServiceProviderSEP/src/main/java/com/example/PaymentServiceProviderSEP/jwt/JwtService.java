@@ -1,6 +1,7 @@
 package com.example.PaymentServiceProviderSEP.jwt;
 
-//import com.example.PaymentServiceProviderSEP.model.User;
+import com.example.PaymentServiceProviderSEP.model.User;
+import com.example.PaymentServiceProviderSEP.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -17,25 +18,25 @@ import java.util.UUID;
 public class JwtService {
 
     private final String jwtSecret = "my-super-long-secret-key-that-is-at-least-32-bytes!";
-    private final long jwtExpirationMs = 86400000; // 1 day
+    private final long jwtExpirationMs = 86400000;
 
     public SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-//    public String generateToken(User user) {
-//        String jti = UUID.randomUUID().toString();
-//
-//        return Jwts.builder()
-//                .id(jti)
-//                .subject(user.getEmail())
-//                .claim("userId", user.getId())
-//                .claim("role", user.getRole().name())
-//                .issuedAt(new Date())
-//                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-//                .signWith(getSigningKey())
-//                .compact();
-//    }
+    public String generateToken(User user) {
+        String jti = UUID.randomUUID().toString();
+
+        return Jwts.builder()
+                .id(jti)
+                .subject(user.getEmail())
+                .claim("userId", user.getId())
+                .claim("role", user.getRole().name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey())
+                .compact();
+    }
 
     public boolean validateToken(String token) {
         try {

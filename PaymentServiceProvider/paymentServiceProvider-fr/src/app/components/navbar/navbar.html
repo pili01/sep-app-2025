@@ -1,0 +1,20 @@
+<nav class="psp-navbar">
+  <div class="navbar-container">
+    <div class="logo-section">
+      <span class="logo-icon">P</span>
+      <span class="logo-text">PSP</span>
+    </div>
+
+    <div class="nav-actions">
+      @if (authService.isLoggedIn()) {
+        <a routerLink="/home" class="nav-link">Home</a>
+        <a routerLink="/merchants" class="nav-link">Merchants</a>
+        <button class="btn-logout" (click)="handleLogout()">
+          Logout
+        </button>
+      } @else {
+        <span class="system-status">Secure Access</span>
+      }
+    </div>
+  </div>
+</nav>
