@@ -30,7 +30,7 @@ export class Login {
     this.authService.login(this.credentials).subscribe({
       next: (response) => {
         console.log('Login successful');
-        this.router.navigate(['/home']);
+        this.router.navigate(['/merchants']);
       },
       error: (err) => {
         console.error(err);

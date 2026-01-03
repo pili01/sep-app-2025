@@ -1,6 +1,6 @@
 <div class="merchants-container">
   <div class="header-row">
-    <h2>Merchant Management</h2>
+    <h2>Merchant Managment</h2>
     <button class="btn-primary" (click)="openAddModal()">+ New Merchant</button>
   </div>
 
@@ -19,6 +19,7 @@
             <td>{{ m.name }}</td>
             <td><span class="status-pill" [attr.data-status]="m.status">{{ m.status }}</span></td>
             <td class="text-right">
+              <button class="btn-subs" (click)="openSubscriptions(m)">Subscriptions</button>
               <button class="btn-view" (click)="openDetails(m)">View Details</button>
             </td>
           </tr>
@@ -32,7 +33,7 @@
   <div class="modal-backdrop" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ modalMode() === 'ADD' ? 'Register New Merchant' : 'Merchant Details' }}</h3>
+        <h3>{{ modalTitle() }}</h3>
         <button class="close-btn" (click)="closeModal()">&times;</button>
       </div>
 
@@ -53,7 +54,18 @@
             
             <button type="submit" class="save-btn">Create Merchant</button>
           </form>
-        } @else {
+        } 
+        @else if (modalMode() === 'SUBS') {
+          <app-merchant-subs [merchantId]="selectedMerchant().id" (onAddNew)="openAddSubscription()"></app-merchant-subs>
+        }    
+        @else if (modalMode() === 'ADD_SUB') {
+          <app-add-sub 
+            [merchantId]="selectedMerchant().id"
+            (onSaved)="modalMode.set('SUBS')"
+            (onCancel)="modalMode.set('SUBS')">
+          </app-add-sub>
+        } 
+        @else {
           <div class="details-view">
             <div class="detail-row">
               <label>Public Merchant ID</label>

@@ -1,0 +1,38 @@
+<div class="subs-container">
+  <div class="subs-action-bar">
+    <h4 class="subs-title">Payment Methods</h4>
+    <button class="btn-add-method" (click)="onAddNew.emit()">
+      <span class="plus-icon">+</span> Add New Method
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loader-container">
+       <div class="loader"></div>
+       <p>Loading methods...</p>
+    </div>
+  } @else {
+    <div class="methods-grid">
+      @for (sub of subscriptions(); track sub.id) {
+        <div class="method-card" [class.disabled]="!sub.enabled">
+          <div class="method-info">
+            <span class="method-code">{{ sub.paymentMethodCode }}</span>
+            <span class="method-status">
+              <span class="dot" [class.active]="sub.enabled"></span>
+              {{ sub.enabled ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          
+          <label class="switch">
+            <input type="checkbox" [checked]="sub.enabled" (change)="toggleStatus(sub)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <p class="empty-msg">No payment methods configured for this merchant.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

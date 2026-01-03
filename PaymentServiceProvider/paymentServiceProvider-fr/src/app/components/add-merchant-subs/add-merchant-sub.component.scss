@@ -1,0 +1,105 @@
+.add-sub-container {
+  padding: 0.5rem 0;
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #64748b; // Matching your other labels
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .psp-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background-color: #f8fafc;
+      transition: all 0.2s ease;
+      font-family: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #1976d2;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+      }
+
+      &::placeholder {
+        color: #cbd5e1;
+      }
+    }
+
+    textarea.psp-input {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+    }
+  }
+
+  .info-box {
+    padding: 1rem;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.9rem;
+    border-left: 4px solid #94a3b8;
+  }
+
+  .loading-spinner {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+
+    button {
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      flex: 1;
+    }
+
+    .btn-back {
+      background: white;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+
+      &:hover {
+        background: #f0f7ff;
+      }
+    }
+
+    .btn-save {
+      background: #1976d2;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: #1565c0;
+      }
+
+      &:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+    }
+  }
+}

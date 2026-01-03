@@ -64,7 +64,7 @@ public class MerchantPaymentMethodSubscriptionService {
         if (enabled != null) {
             subscription.setEnabled(enabled);
         }
-        if (configJson != null) {
+        if (configJson != null && !configJson.isBlank()) {
             subscription.setConfigJson(configJson);
         }
 

@@ -1,12 +1,14 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MerchantService } from '../../service/merchants.service';
+import { MerchantSubs } from '../../components/merchant-subs/merchant-subs.component';
+import { AddSub } from '../../components/add-merchant-subs/add-merchant-sub.component';
 
 @Component({
   selector: 'app-merchants',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MerchantSubs, AddSub],
   templateUrl: './merchants.html',
   styleUrl: './merchants.scss'
 })
@@ -14,9 +16,26 @@ export class Merchants implements OnInit {
   merchants = signal<any[]>([]);
   selectedMerchant = signal<any | null>(null);
   
-  // New UI State Signals
   isModalOpen = signal(false);
-  modalMode = signal<'ADD' | 'DETAILS'>('ADD');
+  modalMode = signal<'ADD' | 'DETAILS' | 'SUBS' | 'ADD_SUB'>('ADD');
+
+  modalTitle = computed(() => {
+    const mode = this.modalMode();
+    const merchantName = this.selectedMerchant()?.name;
+
+    switch (mode) {
+      case 'ADD':
+        return 'Register New Merchant';
+      case 'SUBS':
+        return `Subscriptions: ${merchantName}`;
+      case 'ADD_SUB':
+        return `Add New Payment for ${merchantName}`;
+      case 'DETAILS':
+        return 'Merchant Details';
+      default:
+        return 'Management';
+    }
+  });
   showSensitive = signal(false);
 
   newMerchant = { name: '', successUrl: '', failedUrl: '', errorUrl: '' };
@@ -27,6 +46,16 @@ export class Merchants implements OnInit {
 
   loadMerchants() {
     this.merchantService.getAll().subscribe(data => this.merchants.set(data));
+  }
+
+  openAddSubscription() {
+    this.modalMode.set('ADD_SUB');
+  }
+
+  openSubscriptions(m: any) {
+    this.selectedMerchant.set(m);
+    this.modalMode.set('SUBS');
+    this.isModalOpen.set(true);
   }
 
   openAddModal() {
