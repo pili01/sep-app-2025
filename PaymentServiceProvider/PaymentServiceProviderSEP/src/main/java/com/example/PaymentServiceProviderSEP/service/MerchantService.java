@@ -37,7 +37,7 @@ public class MerchantService {
             Merchant savedMerchant = merchantRepository.save(merchant);
 
             savedMerchant.setMerchantId(UUID.randomUUID().toString());
-            savedMerchant.setMerchantPassword(UUID.randomUUID().toString());
+            savedMerchant.setMerchantPassword(cryptoService.encrypt(UUID.randomUUID().toString()));
 
             return merchantRepository.save(savedMerchant);
 
@@ -49,17 +49,38 @@ public class MerchantService {
     }
 
     public List<Merchant> getAll() {
-        return merchantRepository.findAll();
+        List<Merchant> merchants = merchantRepository.findAll();
+
+        for(Merchant m: merchants){
+            m.setMerchantPassword(cryptoService.decrypt(m.getMerchantPassword()));
+        }
+
+        return merchants;
     }
 
     public Merchant getById(Long id) {
-        return merchantRepository.findById(id)
+        Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Merchant with id " + id + " not found."
                 ));
+
+        merchant.setMerchantPassword(cryptoService.decrypt(merchant.getMerchantPassword()));
+
+        return merchant;
     }
 
-    public boolean verifyCredentials(String id, String password) {
-        return merchantRepository.findByMerchantIdAndMerchantPassword(id, password).isPresent();
+    public boolean verifyCredentials(String id, String inputPassword) {
+        return merchantRepository.findByMerchantId(id)
+                .map(merchant -> {
+                    try {
+                        String decryptedStoredPassword = cryptoService.decrypt(merchant.getMerchantPassword());
+
+                        return decryptedStoredPassword.equals(inputPassword);
+                    } catch (Exception e) {
+                        System.err.println("Decryption failed for merchant: " + id);
+                        return false;
+                    }
+                })
+                .orElse(false);
     }
 }
