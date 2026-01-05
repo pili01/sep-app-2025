@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { EquipmentService, Equipment } from '../../services/equipment.service';
@@ -11,19 +11,18 @@ import { EquipmentService, Equipment } from '../../services/equipment.service';
   styleUrl: './equipment.component.scss'
 })
 export class EquipmentComponent implements OnInit {
-  equipmentList: Equipment[] = [];
-  isLoading = false;
-  showModal = false;
-  isEditMode = false;
-  editingEquipmentId: number | null = null;
+  equipmentList = signal<Equipment[]>([]);
+  isLoading = signal(false);
+  showModal = signal(false);
+  isEditMode = signal(false);
+  editingEquipmentId = signal<number | null>(null);
   equipmentForm: FormGroup;
-  errorMessage = '';
-  successMessage = '';
+  errorMessage = signal('');
+  successMessage = signal('');
 
   constructor(
     private equipmentService: EquipmentService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
   ) {
     this.equipmentForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -37,88 +36,86 @@ export class EquipmentComponent implements OnInit {
   }
 
   loadEquipment(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
-    
-    this.equipmentService.getAllEquipment()
-      .then((equipment) => {
-        this.equipmentList = equipment || [];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      })
-      .catch((error) => {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.equipmentService.getAllEquipment().subscribe({
+      next: (equipment) => {
+        this.equipmentList.set(equipment || []);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
         console.error('Error loading equipment:', error);
-        this.errorMessage = 'Greška pri učitavanju opreme.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      });
+        this.errorMessage.set(error.message || 'Greška pri učitavanju opreme.');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   openAddModal(): void {
-    this.isEditMode = false;
-    this.editingEquipmentId = null;
+    this.isEditMode.set(false);
+    this.editingEquipmentId.set(null);
     this.equipmentForm.reset();
-    this.showModal = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.showModal.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   openEditModal(equipment: Equipment): void {
-    this.isEditMode = true;
-    this.editingEquipmentId = equipment.id || null;
+    this.isEditMode.set(true);
+    this.editingEquipmentId.set(equipment.id || null);
     this.equipmentForm.patchValue({
       name: equipment.name,
       description: equipment.description || '',
       pricePerDay: equipment.pricePerDay
     });
-    this.showModal = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.showModal.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   closeModal(): void {
-    this.showModal = false;
+    this.showModal.set(false);
     this.equipmentForm.reset();
-    this.isEditMode = false;
-    this.editingEquipmentId = null;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isEditMode.set(false);
+    this.editingEquipmentId.set(null);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   onSubmit(): void {
     if (this.equipmentForm.valid) {
       const equipmentData = this.equipmentForm.value;
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
+      this.isLoading.set(true);
+      this.errorMessage.set('');
+      this.successMessage.set('');
 
-      if (this.isEditMode && this.editingEquipmentId) {
-        this.equipmentService.updateEquipment(this.editingEquipmentId, equipmentData).subscribe({
+      if (this.isEditMode() && this.editingEquipmentId()) {
+        this.equipmentService.updateEquipment((this.editingEquipmentId() || 0), equipmentData).subscribe({
           next: () => {
-            this.successMessage = 'Oprema je uspešno ažurirana!';
+            this.successMessage.set('Oprema je uspješno ažurirana!');
             this.loadEquipment();
             setTimeout(() => {
               this.closeModal();
             }, 1500);
           },
           error: (error) => {
-            this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Greška pri ažuriranju opreme.';
+            this.isLoading.set(false);
+            this.errorMessage.set(error.error?.message || 'Greška pri ažuriranju opreme.');
           }
         });
       } else {
         this.equipmentService.createEquipment(equipmentData).subscribe({
           next: () => {
-            this.successMessage = 'Oprema je uspešno kreirana!';
+            this.successMessage.set('Oprema je uspješno kreirana!');
             this.loadEquipment();
             setTimeout(() => {
               this.closeModal();
             }, 1500);
           },
           error: (error) => {
-            this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Greška pri kreiranju opreme.';
+            this.isLoading.set(false);
+            this.errorMessage.set(error.error?.message || 'Greška pri kreiranju opreme.');
           }
         });
       }
@@ -129,18 +126,18 @@ export class EquipmentComponent implements OnInit {
 
   deleteEquipment(id: number): void {
     if (confirm('Da li ste sigurni da želite da obrišete ovu opremu?')) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.equipmentService.deleteEquipment(id).subscribe({
         next: () => {
           this.loadEquipment();
-          this.successMessage = 'Oprema je uspešno obrisana!';
+          this.successMessage.set('Oprema je uspješno obrisana!');
           setTimeout(() => {
-            this.successMessage = '';
+            this.successMessage.set('');
           }, 3000);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Greška pri brisanju opreme.';
+          this.isLoading.set(false);
+          this.errorMessage.set(error.error?.message || 'Greška pri brisanju opreme.');
         }
       });
     }

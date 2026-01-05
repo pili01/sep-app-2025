@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RentalService, Rental } from '../../services/rental.service';
 import { AuthService } from '../../services/auth.service';
@@ -12,16 +12,15 @@ import { Router } from '@angular/router';
   styleUrl: './all-rentals.component.scss'
 })
 export class AllRentalsComponent implements OnInit {
-  rentals: Rental[] = [];
-  isLoading = false;
-  errorMessage = '';
-  successMessage = '';
+  rentals = signal<Rental[]>([]);
+  isLoading = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
 
   constructor(
     private rentalService: RentalService,
     private authService: AuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -33,22 +32,19 @@ export class AllRentalsComponent implements OnInit {
   }
 
   loadRentals(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.rentalService.getAllRentals().subscribe({
       next: (rentals) => {
         // Convert Set to Array if needed
-        this.rentals = Array.isArray(rentals) ? rentals : Array.from(rentals as any);
-        this.isLoading = false;
-        this.cdr.detectChanges();
+        this.rentals.set(Array.isArray(rentals) ? rentals : Array.from(rentals as any));
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading rentals:', error);
-        this.errorMessage = error.error?.message || 'Greška pri učitavanju iznajmljivanja.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
+        this.errorMessage.set(error.error?.message || 'Greška pri učitavanju iznajmljivanja.');
+        this.isLoading.set(false);
       }
     });
   }
@@ -62,23 +58,21 @@ export class AllRentalsComponent implements OnInit {
     }
 
     if (confirm('Da li ste sigurni da želite da otkažete ovo iznajmljivanje?')) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-      this.cdr.detectChanges();
+      this.isLoading.set(true);
+      this.errorMessage.set('');
+      this.successMessage.set('');
 
       this.rentalService.cancelRental(rental.id).subscribe({
         next: (response) => {
-          this.successMessage = 'Iznajmljivanje je uspešno otkazano!';
+          this.successMessage.set('Iznajmljivanje je uspešno otkazano!');
           this.loadRentals();
           setTimeout(() => {
-            this.successMessage = '';
+            this.successMessage.set('');
           }, 3000);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || error.error || 'Greška pri otkazivanju iznajmljivanja.';
-          this.cdr.detectChanges();
+          this.isLoading.set(false);
+          this.errorMessage.set(error.error?.message || error.error || 'Greška pri otkazivanju iznajmljivanja.');
         }
       });
     }
@@ -105,8 +99,8 @@ export class AllRentalsComponent implements OnInit {
 
   getUserName(user: any): string {
     if (!user) return 'Nepoznato';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
+    if (user.name && user.surname) {
+      return `${user.name} ${user.surname}`;
     }
     return user.email || 'Nepoznato';
   }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -13,12 +13,11 @@ import { AuthService } from '../../services/auth.service';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
-  hidePassword = true;
-  hideConfirmPassword = true;
-  isLoading = false;
-  errorMessage = '';
-  successMessage = '';
-
+  hidePassword = signal(true);
+  hideConfirmPassword = signal(true);
+  isLoading = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -51,11 +50,11 @@ export class RegisterComponent {
   }
 
   togglePasswordVisibility(): void {
-    this.hidePassword = !this.hidePassword;
+    this.hidePassword.set(!this.hidePassword());
   }
 
   toggleConfirmPasswordVisibility(): void {
-    this.hideConfirmPassword = !this.hideConfirmPassword;
+    this.hideConfirmPassword.set(!this.hideConfirmPassword());
   }
 
   getPasswordStrength(): string {
@@ -77,23 +76,23 @@ export class RegisterComponent {
 
   onSubmit(): void {
     if (this.registerForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
+      this.isLoading.set(true);
+      this.errorMessage.set('');
+      this.successMessage.set('');
 
       const { confirmPassword, ...registerData } = this.registerForm.value;
 
       this.authService.register(registerData).subscribe({
         next: (response) => {
-          this.isLoading = false;
-          this.successMessage = 'Uspešno ste se registrovali! Preusmjeravamo vas na stranicu za prijavu...';
+          this.isLoading.set(false);
+          this.successMessage.set('Uspešno ste se registrovali! Preusmjeravamo vas na stranicu za prijavu...');
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || error.error || 'Greška pri registraciji. Pokušajte ponovo.';
+          this.isLoading.set(false);
+          this.errorMessage.set(error.error?.message || error.error || 'Greška pri registraciji. Pokušajte ponovo.');
         }
       });
     } else {

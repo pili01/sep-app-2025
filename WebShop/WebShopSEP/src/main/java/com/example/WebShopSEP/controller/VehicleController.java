@@ -30,7 +30,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleResponseDTO> getVehicleById(@PathVariable Integer id) {
+    public ResponseEntity<VehicleResponseDTO> getVehicleById(@PathVariable Long id) {
         try {
             VehicleResponseDTO vehicle = vehicleService.findById(id);
             return ResponseEntity.ok(vehicle);
@@ -48,7 +48,7 @@ public class VehicleController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<VehicleResponseDTO> updateVehicle(@PathVariable Integer id, @RequestBody VehicleUpdateDTO vehicleUpdateDTO) {
+    public ResponseEntity<VehicleResponseDTO> updateVehicle(@PathVariable Long id, @RequestBody VehicleUpdateDTO vehicleUpdateDTO) {
         try {
             VehicleResponseDTO updatedVehicle = vehicleService.update(id, vehicleUpdateDTO);
             return ResponseEntity.ok(updatedVehicle);
@@ -59,7 +59,7 @@ public class VehicleController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVehicle(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long id) {
         try {
             vehicleService.deleteById(id);
             return ResponseEntity.noContent().build();

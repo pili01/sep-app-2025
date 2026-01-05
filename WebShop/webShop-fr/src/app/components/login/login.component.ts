@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -14,15 +14,14 @@ import { finalize } from 'rxjs/operators';
 })
 export class LoginComponent {
   loginForm: FormGroup;
-  hidePassword = true;
-  isLoading = false;
-  errorMessage = '';
+  hidePassword = signal(true);
+  isLoading = signal(false);
+  errorMessage = signal('');
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required]],
@@ -31,26 +30,25 @@ export class LoginComponent {
   }
 
   togglePasswordVisibility(): void {
-    this.hidePassword = !this.hidePassword;
+    this.hidePassword.set(!this.hidePassword());
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
+      this.isLoading.set(true);
+      this.errorMessage.set('');
 
       this.authService.login(this.loginForm.value)
         .pipe(
           finalize(() => {
             console.log('Finalize called - setting isLoading to false');
-            this.isLoading = false;
-            this.cdr.detectChanges();
-            console.log('isLoading after finalize:', this.isLoading);
+            this.isLoading.set(false);
+            console.log('isLoading after finalize:', this.isLoading());
           })
         )
         .subscribe({
           next: (response) => {
-            console.log("uspesno prijavljivanje", response);
+            console.log("uspješno prijavljivanje", response);
             setTimeout(() => {
               // Preusmeri na odgovarajuću stranicu na osnovu uloge
               const user = this.authService.currentUser();
@@ -67,8 +65,7 @@ export class LoginComponent {
           },
           error: (error) => {
             console.error('Login error:', error);
-            this.errorMessage = error.error?.message || error.message || 'Greška pri prijavljivanju. Pokušajte ponovo.';
-            this.cdr.detectChanges();
+            this.errorMessage.set(error.error?.message || error.message || 'Greška pri prijavljivanju. Pokušajte ponovo.');
           }
         });
     } else {

@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Equipment } from './equipment.service';
+import { environment } from '../../environments/environment';
 
 export interface RentalRequest {
   vehicleId: number;
   startDate: string; // ISO format: "2025-12-20T10:00:00"
   endDate: string;
   insuranceId: number;
-  equipmentIds: number[];
+  equipment: Equipment[];
 }
 
 export interface Rental {
@@ -44,16 +46,15 @@ export interface Rental {
     description?: string;
     pricePerDay: number;
   }>;
-  equipmentIds?: number[];
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class RentalService {
-  private apiUrl = 'https://localhost:8441/rental';
+  private apiUrl = environment.apiBaseUrl + '/rental';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   createRental(rental: RentalRequest): Observable<string> {
     return this.http.post(`${this.apiUrl}/`, rental, {
@@ -73,6 +74,10 @@ export class RentalService {
     return this.http.delete(`${this.apiUrl}/${id}`, {
       responseType: 'text'
     }) as Observable<string>;
+  }
+
+  payRental(id: number): Observable<string> {
+    return this.http.patch(`${this.apiUrl}/${id}/pay`, {}, { responseType: 'text' }) as Observable<string>;
   }
 }
 

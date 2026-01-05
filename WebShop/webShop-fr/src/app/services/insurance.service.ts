@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Insurance {
   id?: number;
@@ -13,12 +14,12 @@ export interface Insurance {
   providedIn: 'root'
 })
 export class InsuranceService {
-  private apiUrl = 'https://localhost:8441/api/insurances';
+  private apiUrl = environment.apiBaseUrl + '/insurances';
 
   constructor(private http: HttpClient) {}
 
-  getAllInsurances(): Promise<Insurance[]> {
-    return firstValueFrom(this.http.get<Insurance[]>(this.apiUrl));
+  getAllInsurances(): Observable<Insurance[]> {
+    return this.http.get<Insurance[]>(this.apiUrl);
   }
 
   getInsuranceById(id: number): Observable<Insurance> {

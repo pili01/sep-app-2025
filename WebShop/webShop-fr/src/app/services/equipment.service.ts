@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Equipment {
   id?: number;
@@ -13,12 +14,12 @@ export interface Equipment {
   providedIn: 'root'
 })
 export class EquipmentService {
-  private apiUrl = 'https://localhost:8441/api/equipment';
+  private apiUrl = environment.apiBaseUrl + '/equipment';
 
   constructor(private http: HttpClient) {}
 
-  getAllEquipment(): Promise<Equipment[]> {
-    return firstValueFrom(this.http.get<Equipment[]>(this.apiUrl));
+  getAllEquipment(): Observable<Equipment[]> {
+    return this.http.get<Equipment[]>(this.apiUrl);
   }
 
   getEquipmentById(id: number): Observable<Equipment> {

@@ -1,6 +1,7 @@
 package com.example.PaymentServiceProviderSEP.repository;
 
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
+import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +17,8 @@ public interface MerchantPaymentMethodSubscriptionRepository extends JpaReposito
 
     long countByMerchantIdAndEnabledTrue(Long merchantId);
 
-    Optional<MerchantPaymentMethodSubscription> findByMerchantIdAndPaymentMethodCode(Long merchantId, com.example.PaymentServiceProviderSEP.model.PaymentMethodCode paymentMethodCode);
+    Optional<MerchantPaymentMethodSubscription> findByMerchantIdAndPaymentMethodCode(Long merchantId, PaymentMethodCode paymentMethodCode);
 
-    boolean existsByMerchantIdAndPaymentMethodCode(Long merchantId, com.example.PaymentServiceProviderSEP.model.PaymentMethodCode paymentMethodCode);
+    boolean existsByMerchantIdAndPaymentMethodCode(Long merchantId, PaymentMethodCode paymentMethodCode);
 }
 

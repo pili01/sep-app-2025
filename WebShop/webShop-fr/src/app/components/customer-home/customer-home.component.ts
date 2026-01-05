@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { VehicleService, Vehicle } from '../../services/vehicle.service';
@@ -7,6 +7,7 @@ import { InsuranceService, Insurance } from '../../services/insurance.service';
 import { RentalService, RentalRequest } from '../../services/rental.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-customer-home',
@@ -16,21 +17,21 @@ import { Router } from '@angular/router';
   styleUrl: './customer-home.component.scss'
 })
 export class CustomerHomeComponent implements OnInit {
-  vehicles: Vehicle[] = [];
-  isLoading = false;
-  errorMessage = '';
-  
+  vehicles = signal<Vehicle[]>([]);
+  isLoading = signal(false);
+  errorMessage = signal('');
+
   // Rental modal
-  showRentalModal = false;
-  selectedVehicle: Vehicle | null = null;
-  equipmentList: Equipment[] = [];
-  insuranceList: Insurance[] = [];
+  showRentalModal = signal(false);
+  selectedVehicle = signal<Vehicle | null>(null);
+  equipmentList = signal<Equipment[]>([]);
+  insuranceList = signal<Insurance[]>([]);
   rentalForm: FormGroup;
-  selectedEquipmentIds: number[] = [];
-  selectedInsuranceId: number | null = null;
-  isLoadingRental = false;
-  rentalErrorMessage = '';
-  rentalSuccessMessage = '';
+  selectedEquipments= signal<Equipment[]>([]);
+  selectedInsuranceId = signal<number | null>(null);
+  isLoadingRental = signal(false);
+  rentalErrorMessage = signal('');
+  rentalSuccessMessage = signal('');
 
   constructor(
     private vehicleService: VehicleService,
@@ -39,7 +40,6 @@ export class CustomerHomeComponent implements OnInit {
     private rentalService: RentalService,
     private authService: AuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef,
     private fb: FormBuilder
   ) {
     this.rentalForm = this.fb.group({
@@ -59,78 +59,76 @@ export class CustomerHomeComponent implements OnInit {
   }
 
   loadVehicles(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
+    this.isLoading.set(true);
+    this.errorMessage.set('');
     
-    this.vehicleService.getAllVehicles()
-      .then((vehicles) => {
-        this.vehicles = vehicles || [];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      })
-      .catch((error) => {
+    this.vehicleService.getAllVehicles().subscribe({
+      next: (vehicles) => {
+        this.vehicles.set(vehicles || []);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
         console.error('Error loading vehicles:', error);
-        this.errorMessage = 'Greška pri učitavanju vozila.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      });
-  }
-
-  rentVehicle(vehicle: Vehicle): void {
-    this.selectedVehicle = vehicle;
-    this.selectedEquipmentIds = [];
-    this.selectedInsuranceId = null;
-    this.rentalForm.reset();
-    this.rentalErrorMessage = '';
-    this.rentalSuccessMessage = '';
-    this.loadEquipmentAndInsurance();
-    this.showRentalModal = true;
-  }
-
-  closeRentalModal(): void {
-    this.showRentalModal = false;
-    this.selectedVehicle = null;
-    this.selectedEquipmentIds = [];
-    this.selectedInsuranceId = null;
-    this.rentalForm.reset();
-    this.rentalErrorMessage = '';
-    this.rentalSuccessMessage = '';
-  }
-
-  loadEquipmentAndInsurance(): void {
-    Promise.all([
-      this.equipmentService.getAllEquipment(),
-      this.insuranceService.getAllInsurances()
-    ]).then(([equipment, insurances]) => {
-      this.equipmentList = equipment || [];
-      this.insuranceList = insurances || [];
-      this.cdr.detectChanges();
-    }).catch((error) => {
-      console.error('Error loading equipment/insurance:', error);
-      this.rentalErrorMessage = 'Greška pri učitavanju opreme i osiguranja.';
-      this.cdr.detectChanges();
+        this.errorMessage.set(error.message || 'Greška pri učitavanju vozila.');
+        this.isLoading.set(false);
+      }
     });
   }
 
-  toggleEquipment(equipmentId: number): void {
-    const index = this.selectedEquipmentIds.indexOf(equipmentId);
-    if (index > -1) {
-      this.selectedEquipmentIds.splice(index, 1);
+  rentVehicle(vehicle: Vehicle): void {
+    this.selectedVehicle.set(vehicle);
+    this.selectedEquipments.set([]);
+    this.selectedInsuranceId.set(null);
+    this.rentalForm.reset();
+    this.rentalErrorMessage.set('');
+    this.rentalSuccessMessage.set('');
+    this.loadEquipmentAndInsurance();
+    this.showRentalModal.set(true);
+  }
+
+  closeRentalModal(): void {
+    this.showRentalModal.set(false);
+    this.selectedVehicle.set(null);
+    this.selectedEquipments.set([]);
+    this.selectedInsuranceId.set(null);
+    this.rentalForm.reset();
+    this.rentalErrorMessage.set('');
+    this.rentalSuccessMessage.set('');
+  }
+
+  loadEquipmentAndInsurance(): void {
+    forkJoin({
+      equipment: this.equipmentService.getAllEquipment(),
+      insurances: this.insuranceService.getAllInsurances()
+    }).subscribe({
+      next: ({ equipment, insurances }) => {
+        this.equipmentList.set(equipment || []);
+        this.insuranceList.set(insurances || []);
+      },
+      error: (error) => {
+        console.error('Error loading equipment/insurance:', error);
+        this.rentalErrorMessage.set(error.message || 'Greška pri učitavanju opreme i osiguranja.');
+      }
+    });
+  }
+
+  toggleEquipment(equipment: Equipment): void {
+    if (!this.selectedEquipments().includes(equipment)) {
+      this.selectedEquipments.set([...this.selectedEquipments(), equipment]);
     } else {
-      this.selectedEquipmentIds.push(equipmentId);
+      this.selectedEquipments.set(this.selectedEquipments().filter(e => e !== equipment));
     }
     this.calculateTotalPrice();
   }
 
   selectInsurance(insuranceId: number): void {
-    this.selectedInsuranceId = insuranceId;
+    this.selectedInsuranceId.set(insuranceId);
     this.rentalForm.patchValue({ insuranceId });
     this.calculateTotalPrice();
   }
 
-  isEquipmentSelected(equipmentId: number): boolean {
-    return this.selectedEquipmentIds.includes(equipmentId);
+  isEquipmentSelected(equipment: Equipment): boolean {
+    return this.selectedEquipments().includes(equipment);
   }
 
   calculateTotalPrice(): number {
@@ -149,13 +147,12 @@ export class CustomerHomeComponent implements OnInit {
     const end = new Date(endDate);
     const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
-    const vehiclePrice = this.selectedVehicle.pricePerDay * days;
-    const selectedInsurance = this.insuranceList.find(i => i.id === this.selectedInsuranceId);
+    const vehiclePrice = (this.selectedVehicle()?.pricePerDay || 0) * days;
+    const selectedInsurance = this.insuranceList().find(i => i.id === this.selectedInsuranceId());
     const insurancePrice = selectedInsurance ? selectedInsurance.pricePerDay * days : 0;
-    
-    const equipmentPrice = this.selectedEquipmentIds.reduce((sum, id) => {
-      const equipment = this.equipmentList.find(e => e.id === id);
-      return sum + (equipment ? equipment.pricePerDay * days : 0);
+
+    const equipmentPrice = this.selectedEquipments().reduce((sum, equipment) => {
+      return sum + (equipment.pricePerDay * days);
     }, 0);
 
     return vehiclePrice + insurancePrice + equipmentPrice;
@@ -166,16 +163,15 @@ export class CustomerHomeComponent implements OnInit {
       return 0;
     }
 
-    const vehiclePrice = this.selectedVehicle.pricePerDay;
-    const selectedInsurance = this.insuranceList.find(i => i.id === this.selectedInsuranceId);
+    const vehiclePrice = this.selectedVehicle()?.pricePerDay;
+    const selectedInsurance = this.insuranceList().find(i => i.id === this.selectedInsuranceId());
     const insurancePrice = selectedInsurance ? selectedInsurance.pricePerDay : 0;
-    
-    const equipmentPrice = this.selectedEquipmentIds.reduce((sum, id) => {
-      const equipment = this.equipmentList.find(e => e.id === id);
-      return sum + (equipment ? equipment.pricePerDay : 0);
+
+    const equipmentPrice = this.selectedEquipments().reduce((sum, equipment) => {
+      return sum + (equipment.pricePerDay);
     }, 0);
 
-    return vehiclePrice + insurancePrice + equipmentPrice;
+    return (vehiclePrice || 0) + insurancePrice + equipmentPrice;
   }
 
   getNumberOfDays(): number {
@@ -192,42 +188,43 @@ export class CustomerHomeComponent implements OnInit {
   }
 
   onSubmitRental(): void {
-    if (this.rentalForm.valid && this.selectedVehicle && this.selectedInsuranceId) {
-      this.isLoadingRental = true;
-      this.rentalErrorMessage = '';
-      this.rentalSuccessMessage = '';
+    if (this.rentalForm.valid && this.selectedVehicle() && this.selectedInsuranceId()) {
+      this.isLoadingRental.set(true);
+      this.rentalErrorMessage.set('');
+      this.rentalSuccessMessage.set('');
 
       const startDate = new Date(this.rentalForm.get('startDate')?.value);
       const endDate = new Date(this.rentalForm.get('endDate')?.value);
 
       // Format dates as ISO string for backend
       const rentalRequest: RentalRequest = {
-        vehicleId: this.selectedVehicle.id!,
+        vehicleId: this.selectedVehicle()?.id!,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        insuranceId: this.selectedInsuranceId,
-        equipmentIds: this.selectedEquipmentIds
+        insuranceId: this.selectedInsuranceId()!,
+        equipment: this.selectedEquipments()
       };
 
       this.rentalService.createRental(rentalRequest).subscribe({
         next: (response) => {
-          this.rentalSuccessMessage = 'Iznajmljivanje je uspešno kreirano!';
-          this.isLoadingRental = false;
+          // Response is payment URL - redirect to PSP
+          this.rentalSuccessMessage.set('Iznajmljivanje je uspešno kreirano!');
+          this.isLoadingRental.set(false);
           setTimeout(() => {
             this.closeRentalModal();
-            this.loadVehicles(); // Refresh vehicles list
+            this.router.navigate(['/my-rentals']);
           }, 2000);
         },
         error: (error) => {
-          this.isLoadingRental = false;
-          this.rentalErrorMessage = error.error?.message || error.error || 'Greška pri kreiranju iznajmljivanja.';
+          this.isLoadingRental.set(false);
+          this.rentalErrorMessage.set(error.message || error.error?.message || error.error || 'Greška pri kreiranju iznajmljivanja.');
           console.error('Rental error:', error);
         }
       });
     } else {
       this.markFormGroupTouched(this.rentalForm);
-      if (!this.selectedInsuranceId) {
-        this.rentalErrorMessage = 'Morate izabrati osiguranje.';
+      if (!this.selectedInsuranceId()) {
+        this.rentalErrorMessage.set('Morate izabrati osiguranje.');
       }
     }
   }
@@ -256,10 +253,10 @@ export class CustomerHomeComponent implements OnInit {
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'];
     const lowerUrl = url.toLowerCase();
     return imageExtensions.some(ext => lowerUrl.endsWith(ext) || lowerUrl.includes(ext + '?')) ||
-           lowerUrl.includes('i.imgur.com') ||
-           lowerUrl.includes('images.unsplash.com') ||
-           lowerUrl.includes('cdn.pexels.com') ||
-           lowerUrl.includes('images.pexels.com');
+      lowerUrl.includes('i.imgur.com') ||
+      lowerUrl.includes('images.unsplash.com') ||
+      lowerUrl.includes('cdn.pexels.com') ||
+      lowerUrl.includes('images.pexels.com');
   }
 
   onImageError(event: any): void {

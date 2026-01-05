@@ -14,7 +14,7 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*")); // Dozvoli Angular frontend
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Dozvoljene metode
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")); // Dozvoljene metode
         configuration.setAllowedHeaders(List.of("*")); // Dozvoli sva zaglavlja
         configuration.setAllowCredentials(true); // Omogući slanje Authorization header-a
 

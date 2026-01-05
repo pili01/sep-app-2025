@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { VehicleService, Vehicle } from '../../services/vehicle.service';
 import { AuthService } from '../../services/auth.service';
@@ -12,20 +12,18 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  vehicles: Vehicle[] = [];
-  isLoading = false;
-  showModal = false;
-  isEditMode = false;
-  editingVehicleId: number | null = null;
+  vehicles = signal<Vehicle[]>([]);
+  isLoading = signal(false);
+  showModal = signal(false);
+  isEditMode = signal(false);
+  editingVehicleId = signal<number | null>(null);
   vehicleForm: FormGroup;
-  errorMessage = '';
-  successMessage = '';
+  errorMessage = signal('');
+  successMessage = signal('');
 
   constructor(
     private vehicleService: VehicleService,
-    private authService: AuthService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
   ) {
     this.vehicleForm = this.fb.group({
       pricePerDay: ['', [Validators.required, Validators.min(0.01)]],
@@ -41,36 +39,34 @@ export class HomeComponent implements OnInit {
   }
 
   loadVehicles(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
+    this.isLoading.set(true);
+    this.errorMessage.set('');
     
-    this.vehicleService.getAllVehicles()
-      .then((vehicles) => {
-        this.vehicles = vehicles || [];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      })
-      .catch((error) => {
+    this.vehicleService.getAllVehicles().subscribe({
+      next: (vehicles) => {
+        this.vehicles.set(vehicles || []);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
         console.error('Error loading vehicles:', error);
-        this.errorMessage = 'Greška pri učitavanju vozila.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      });
+        this.errorMessage.set(error.message || 'Greška pri učitavanju vozila.');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   openAddModal(): void {
-    this.isEditMode = false;
-    this.editingVehicleId = null;
+    this.isEditMode.set(false);
+    this.editingVehicleId.set(null);
     this.vehicleForm.reset();
-    this.showModal = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.showModal.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   openEditModal(vehicle: Vehicle): void {
-    this.isEditMode = true;
-    this.editingVehicleId = vehicle.id || null;
+    this.isEditMode.set(true);
+    this.editingVehicleId.set(vehicle.id || null);
     this.vehicleForm.patchValue({
       pricePerDay: vehicle.pricePerDay,
       registration: vehicle.registration,
@@ -78,53 +74,53 @@ export class HomeComponent implements OnInit {
       type: vehicle.type,
       pictureUrl: vehicle.pictureUrl || ''
     });
-    this.showModal = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.showModal.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   closeModal(): void {
-    this.showModal = false;
+    this.showModal.set(false);
     this.vehicleForm.reset();
-    this.isEditMode = false;
-    this.editingVehicleId = null;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isEditMode.set(false);
+    this.editingVehicleId.set(null);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   onSubmit(): void {
     if (this.vehicleForm.valid) {
       const vehicleData = this.vehicleForm.value;
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
+      this.isLoading.set(true);
+      this.errorMessage.set('');
+      this.successMessage.set('');
 
-      if (this.isEditMode && this.editingVehicleId) {
-        this.vehicleService.updateVehicle(this.editingVehicleId, vehicleData).subscribe({
+      if (this.isEditMode() && this.editingVehicleId()) {
+        this.vehicleService.updateVehicle((this.editingVehicleId() || 0), vehicleData).subscribe({
           next: () => {
-            this.successMessage = 'Vozilo je uspešno ažurirano!';
+            this.successMessage.set('Vozilo je uspješno ažurirano!');
             this.loadVehicles();
             setTimeout(() => {
               this.closeModal();
             }, 1500);
           },
           error: (error) => {
-            this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Greška pri ažuriranju vozila.';
+            this.isLoading.set(false);
+            this.errorMessage.set(error.error?.message || 'Greška pri ažuriranju vozila.');
           }
         });
       } else {
         this.vehicleService.createVehicle(vehicleData).subscribe({
           next: () => {
-            this.successMessage = 'Vozilo je uspešno kreirano!';
+            this.successMessage.set('Vozilo je uspješno kreirano!');
             this.loadVehicles();
             setTimeout(() => {
               this.closeModal();
             }, 1500);
           },
           error: (error) => {
-            this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Greška pri kreiranju vozila.';
+            this.isLoading.set(false);
+            this.errorMessage.set(error.error?.message || 'Greška pri kreiranju vozila.');
           }
         });
       }
@@ -135,18 +131,18 @@ export class HomeComponent implements OnInit {
 
   deleteVehicle(id: number): void {
     if (confirm('Da li ste sigurni da želite da obrišete ovo vozilo?')) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.vehicleService.deleteVehicle(id).subscribe({
         next: () => {
           this.loadVehicles();
-          this.successMessage = 'Vozilo je uspešno obrisano!';
+          this.successMessage.set('Vozilo je uspješno obrisano!');
           setTimeout(() => {
-            this.successMessage = '';
+            this.successMessage.set('');
           }, 3000);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Greška pri brisanju vozila.';
+          this.isLoading.set(false);
+          this.errorMessage.set(error.error?.message || 'Greška pri brisanju vozila.');
         }
       });
     }

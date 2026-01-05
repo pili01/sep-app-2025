@@ -32,7 +32,7 @@ public class EquipmentService {
                 .collect(Collectors.toList());
     }
 
-    public EquipmentResponseDTO findById(Integer id) {
+    public EquipmentResponseDTO findById(Long id) {
         Equipment equipment = equipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + id));
         return modelMapper.map(equipment, EquipmentResponseDTO.class);
@@ -44,7 +44,7 @@ public class EquipmentService {
         return modelMapper.map(savedEquipment, EquipmentResponseDTO.class);
     }
 
-    public EquipmentResponseDTO update(Integer id, EquipmentUpdateDTO equipmentUpdateDTO) {
+    public EquipmentResponseDTO update(Long id, EquipmentUpdateDTO equipmentUpdateDTO) {
         Equipment equipment = equipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + id));
 
@@ -53,7 +53,7 @@ public class EquipmentService {
         return modelMapper.map(updatedEquipment, EquipmentResponseDTO.class);
     }
 
-    public void deleteById(Integer id) {
+    public void deleteById(Long id) {
         if (!equipmentRepository.existsById(id)) {
             throw new RuntimeException("Equipment not found with id: " + id);
         }

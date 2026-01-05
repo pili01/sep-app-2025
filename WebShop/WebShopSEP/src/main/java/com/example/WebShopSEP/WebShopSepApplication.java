@@ -1,6 +1,6 @@
 package com.example.WebShopSEP;
 
-import com.example.WebShopSEP.service.MerchantClientService;
+import com.example.WebShopSEP.service.PSPClientService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,11 +16,11 @@ public class WebShopSepApplication {
 	}
 
 	@Bean
-	public CommandLineRunner testHandshake(MerchantClientService merchantClientService) {
+	public CommandLineRunner testHandshake(PSPClientService PSPClientService) {
 		return args -> {
 			System.out.println("--- TESTING HANDSHAKE ON STARTUP ---");
 			try {
-				merchantClientService.connectToMerchantBackend();
+				PSPClientService.connectToMerchantBackend();
 				System.out.println("Handshake test execution finished.");
 			} catch (Exception e) {
 				System.err.println("Handshake failed during startup: " + e.getMessage());

@@ -30,7 +30,7 @@ public class InsuranceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<InsuranceResponseDTO> getInsuranceById(@PathVariable Integer id) {
+    public ResponseEntity<InsuranceResponseDTO> getInsuranceById(@PathVariable Long id) {
         try {
             InsuranceResponseDTO insurance = insuranceService.findById(id);
             return ResponseEntity.ok(insurance);
@@ -48,7 +48,7 @@ public class InsuranceController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<InsuranceResponseDTO> updateInsurance(@PathVariable Integer id, @RequestBody InsuranceUpdateDTO insuranceUpdateDTO) {
+    public ResponseEntity<InsuranceResponseDTO> updateInsurance(@PathVariable Long id, @RequestBody InsuranceUpdateDTO insuranceUpdateDTO) {
         try {
             InsuranceResponseDTO updatedInsurance = insuranceService.update(id, insuranceUpdateDTO);
             return ResponseEntity.ok(updatedInsurance);
@@ -59,7 +59,7 @@ public class InsuranceController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInsurance(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteInsurance(@PathVariable Long id) {
         try {
             insuranceService.deleteById(id);
             return ResponseEntity.noContent().build();

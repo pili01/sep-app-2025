@@ -15,12 +15,12 @@ import java.security.KeyStore;
 import java.util.Map;
 
 @Service
-public class MerchantClientService {
+public class PSPClientService {
 
     private final RestClient restClient;
     private final ConfigProperties config;
 
-    public MerchantClientService(RestClient.Builder builder, ConfigProperties config) {
+    public PSPClientService(RestClient.Builder builder, ConfigProperties config) {
         this.config = config;
         try {
             KeyStore trustStore = KeyStore.getInstance(config.getKeyStoreType());
@@ -76,6 +76,33 @@ public class MerchantClientService {
         } catch (Exception e) {
             System.err.println("--- HANDSHAKE FAILED ---");
             System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    public String initializePayment(Double amount, String merchantOrderId, String merchantTimestamp) {
+        Map<String, Object> requestBody = Map.of(
+                "merchantId", config.getMerchantId(),
+                "merchantPassword", config.getMerchantPassword(),
+                "amount", amount,
+                "currency", config.getCurrency(),
+                "merchantOrderId", merchantOrderId,
+                "merchantTimestamp", merchantTimestamp
+        );
+
+        try {
+            Map<String, Object> response = restClient.post()
+                    .uri("/api/payment/init")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && response.containsKey("redirectionUrl")) {
+                return (String) response.get("redirectionUrl");
+            }
+
+            throw new RuntimeException("Invalid response from PSP");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize payment with PSP: " + e.getMessage(), e);
         }
     }
 }

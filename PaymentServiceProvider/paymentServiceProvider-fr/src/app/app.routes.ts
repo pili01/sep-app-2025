@@ -3,6 +3,7 @@ import { Login } from './pages/login/login';
 import { Home } from './pages/home/home';
 import { authGuard } from './service/auth.guard'; // Assume you created this from my previous msg
 import { Merchants } from './pages/merchants/merchants';
+import { PaymentComponent } from './components/payment/payment.component';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -16,6 +17,7 @@ export const routes: Routes = [
     component: Merchants, 
     canActivate: [authGuard] 
   },
+  { path: 'payment/:merchantId', component: PaymentComponent },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' }
 ];

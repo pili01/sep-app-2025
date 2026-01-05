@@ -32,7 +32,7 @@ public class VehicleService {
                 .collect(Collectors.toList());
     }
 
-    public VehicleResponseDTO findById(Integer id) {
+    public VehicleResponseDTO findById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + id));
         return modelMapper.map(vehicle, VehicleResponseDTO.class);
@@ -44,7 +44,7 @@ public class VehicleService {
         return modelMapper.map(savedVehicle, VehicleResponseDTO.class);
     }
 
-    public VehicleResponseDTO update(Integer id, VehicleUpdateDTO vehicleUpdateDTO) {
+    public VehicleResponseDTO update(Long id, VehicleUpdateDTO vehicleUpdateDTO) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + id));
 
@@ -53,7 +53,7 @@ public class VehicleService {
         return modelMapper.map(updatedVehicle, VehicleResponseDTO.class);
     }
 
-    public void deleteById(Integer id) {
+    public void deleteById(Long id) {
         if (!vehicleRepository.existsById(id)) {
             throw new RuntimeException("Vehicle not found with id: " + id);
         }

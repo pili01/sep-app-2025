@@ -1,7 +1,7 @@
 <div class="login-container">
   <div class="login-card">
     <div class="login-header">
-      <img src="/assets/icons/web_icon.png" style="width: 200px; height: 200px;" alt="WebShop Icon" onerror="this.style.display='none'">
+      <img src="/assets/icons/web_icon.png" style="height: 150px;width: auto;margin-bottom: 1rem;" alt="WebShop Icon" onerror="this.style.display='none'">
       <h1>Dobrodošli</h1>
       <p>Prijavite se na svoj nalog</p>
     </div>
@@ -34,7 +34,7 @@
         <label for="password">Lozinka</label>
         <div class="input-wrapper password-wrapper">
           <input
-            [type]="hidePassword ? 'password' : 'text'"
+            [type]="hidePassword() ? 'password' : 'text'"
             id="password"
             formControlName="password"
             placeholder="Vaša lozinka"
@@ -47,7 +47,7 @@
             (click)="togglePasswordVisibility()"
             aria-label="Prikaži/Sakrij lozinku"
           >
-            @if (hidePassword) {
+            @if (hidePassword()) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
@@ -71,18 +71,18 @@
         }
       </div>
 
-      @if (errorMessage) {
+      @if (errorMessage()) {
         <div class="error-alert">
-          {{ errorMessage }}
+          {{ errorMessage() }}
         </div>
       }
 
       <button
         type="submit"
         class="submit-button"
-        [disabled]="isLoading || loginForm.invalid"
+        [disabled]="isLoading() || loginForm.invalid"
       >
-        @if (isLoading) {
+        @if (isLoading()) {
           <span class="spinner"></span>
           Prijavljivanje...
         } @else {

@@ -31,7 +31,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EquipmentResponseDTO> getEquipmentById(@PathVariable Integer id) {
+    public ResponseEntity<EquipmentResponseDTO> getEquipmentById(@PathVariable Long id) {
         try {
             EquipmentResponseDTO equipment = equipmentService.findById(id);
             return ResponseEntity.ok(equipment);
@@ -49,7 +49,7 @@ public class EquipmentController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<EquipmentResponseDTO> updateEquipment(@PathVariable Integer id, @RequestBody EquipmentUpdateDTO equipmentUpdateDTO) {
+    public ResponseEntity<EquipmentResponseDTO> updateEquipment(@PathVariable Long id, @RequestBody EquipmentUpdateDTO equipmentUpdateDTO) {
         try {
             EquipmentResponseDTO updatedEquipment = equipmentService.update(id, equipmentUpdateDTO);
             return ResponseEntity.ok(updatedEquipment);
@@ -60,7 +60,7 @@ public class EquipmentController {
 
     @PreAuthorize("hasRole('AUTHOR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEquipment(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteEquipment(@PathVariable Long id) {
         try {
             equipmentService.deleteById(id);
             return ResponseEntity.noContent().build();

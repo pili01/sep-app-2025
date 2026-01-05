@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/rental")
+@RequestMapping("/api/rental")
 public class RentalController {
     public final RentalService rentalService;
 
@@ -31,7 +31,7 @@ public class RentalController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getRentalById(@PathVariable Integer id) {
+    public ResponseEntity<Object> getRentalById(@PathVariable Long id) {
         try {
             RentalDto rentalDto = rentalService.getRentalById(id);
             return ResponseEntity.ok().body(rentalDto);
@@ -62,10 +62,22 @@ public class RentalController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> cancelRental(@PathVariable Integer id) {
+    public ResponseEntity<Object> cancelRental(@PathVariable Long id) {
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
             String response = rentalService.cancelRental(id, email);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PatchMapping("/{id}/pay")
+    public ResponseEntity<Object> payForRental(@PathVariable Long id) {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            String response = rentalService.payForRental(id, email);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

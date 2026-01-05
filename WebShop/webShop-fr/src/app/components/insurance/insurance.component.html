@@ -2,7 +2,7 @@
   <div class="header">
     <div class="header-content">
       <h1>Upravljanje osiguranjem</h1>
-      <p>Pregledajte, dodajte, izmenite ili obrišite osiguranja</p>
+      <p>Pregledajte, dodajte, izmjenite ili obrišite osiguranja</p>
     </div>
     <button type="button" class="add-button" (click)="openAddModal()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -13,20 +13,20 @@
     </button>
   </div>
 
-  <div *ngIf="successMessage" class="success-alert">
-    {{ successMessage }}
+  <div *ngIf="successMessage()" class="success-alert">
+    {{ successMessage() }}
   </div>
 
-  <div *ngIf="errorMessage" class="error-alert">
-    {{ errorMessage }}
+  <div *ngIf="errorMessage()" class="error-alert">
+    {{ errorMessage() }}
   </div>
 
-  <div *ngIf="isLoading" class="loading-container">
+  <div *ngIf="isLoading()" class="loading-container">
     <div class="spinner"></div>
     <p>Učitavanje osiguranja...</p>
   </div>
 
-  <div *ngIf="!isLoading && insuranceList.length === 0" class="empty-state">
+  <div *ngIf="!isLoading() && insuranceList().length === 0" class="empty-state">
     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
       <polyline points="12 15 17 21 7 21 12 15"></polyline>
@@ -42,13 +42,13 @@
     </button>
   </div>
 
-  <div *ngIf="!isLoading && insuranceList.length > 0" class="items-grid">
-    <div *ngFor="let insurance of insuranceList" class="item-card">
+  <div *ngIf="!isLoading() && insuranceList().length > 0" class="items-grid">
+    <div *ngFor="let insurance of insuranceList()" class="item-card">
       <div class="item-content">
         <h3 class="item-name">{{ insurance.company }}</h3>
         <p class="item-description" *ngIf="insurance.name">{{ insurance.name }}</p>
         <div class="item-price">
-          <span class="price-label">Cena po danu:</span>
+          <span class="price-label">Cijena po danu:</span>
           <span class="price-value">{{ insurance.pricePerDay | number:'1.2-2' }} €</span>
         </div>
       </div>
@@ -58,7 +58,7 @@
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
-          <span>Izmeni</span>
+          <span>Izmjeni</span>
         </button>
         <button type="button" class="action-btn delete-btn" (click)="deleteInsurance(insurance.id!)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -72,10 +72,10 @@
   </div>
 
   <!-- Modal -->
-  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div *ngIf="showModal()" class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>{{ isEditMode ? 'Izmeni osiguranje' : 'Dodaj novo osiguranje' }}</h2>
+        <h2>{{ isEditMode() ? 'Izmeni osiguranje' : 'Dodaj novo osiguranje' }}</h2>
         <button type="button" class="close-button" (click)="closeModal()">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -101,26 +101,26 @@
         </div>
 
         <div class="form-group">
-          <label for="pricePerDay">Cena po danu (€) *</label>
+          <label for="pricePerDay">Cijena po danu (€) *</label>
           <input type="number" id="pricePerDay" formControlName="pricePerDay" placeholder="0.00"
             step="0.01" min="0.01" [class.error]="pricePerDay?.invalid && pricePerDay?.touched" />
           <span *ngIf="pricePerDay?.invalid && pricePerDay?.touched" class="error-message">
-            <span *ngIf="pricePerDay?.errors?.['required']">Cena je obavezna</span>
-            <span *ngIf="pricePerDay?.errors?.['min'] && !pricePerDay?.errors?.['required']">Cena mora biti veća od 0</span>
+            <span *ngIf="pricePerDay?.errors?.['required']">Cijena je obavezna</span>
+            <span *ngIf="pricePerDay?.errors?.['min'] && !pricePerDay?.errors?.['required']">Cijena mora biti veća od 0</span>
           </span>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="cancel-button" (click)="closeModal()" [disabled]="isLoading">
+          <button type="button" class="cancel-button" (click)="closeModal()" [disabled]="isLoading()">
             Otkaži
           </button>
-          <button type="submit" class="submit-button" [disabled]="isLoading || insuranceForm.invalid">
-            <span *ngIf="isLoading">
+          <button type="submit" class="submit-button" [disabled]="isLoading() || insuranceForm.invalid">
+            <span *ngIf="isLoading()">
               <span class="spinner"></span>
-              {{ isEditMode ? 'Čuvanje...' : 'Kreiranje...' }}
+              {{ isEditMode() ? 'Čuvanje...' : 'Kreiranje...' }}
             </span>
-            <span *ngIf="!isLoading">
-              {{ isEditMode ? 'Sačuvaj izmene' : 'Kreiraj osiguranje' }}
+            <span *ngIf="!isLoading()">
+              {{ isEditMode() ? 'Sačuvaj izmjene' : 'Kreiraj osiguranje' }}
             </span>
           </button>
         </div>

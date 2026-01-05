@@ -1,7 +1,7 @@
 <div class="register-container">
     <div class="register-card">
         <div class="register-header">
-            <img src="/assets/icons/web_icon.png" style="width: 200px; height: 200px;" alt="WebShop Icon"
+            <img src="/assets/icons/web_icon.png" style="height: 150px;width: auto;margin-bottom: 1rem;" alt="WebShop Icon"
                 onerror="this.style.display='none'">
             <h1>Kreirajte nalog</h1>
             <p>Registrujte se i počnite koristiti našu aplikaciju</p>
@@ -64,12 +64,12 @@
             <div class="form-group">
                 <label for="password">Lozinka</label>
                 <div class="input-wrapper password-wrapper">
-                    <input [type]="hidePassword ? 'password' : 'text'" id="password" formControlName="password"
+                    <input [type]="hidePassword() ? 'password' : 'text'" id="password" formControlName="password"
                         placeholder="Vaša lozinka" [class.error]="password?.invalid && password?.touched"
                         autocomplete="new-password" />
                     <button type="button" class="password-toggle" (click)="togglePasswordVisibility()"
                         aria-label="Prikaži/Sakrij lozinku">
-                        @if (hidePassword) {
+                        @if (hidePassword()) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -127,13 +127,13 @@
             <div class="form-group">
                 <label for="confirmPassword">Potvrdite lozinku</label>
                 <div class="input-wrapper password-wrapper">
-                    <input [type]="hideConfirmPassword ? 'password' : 'text'" id="confirmPassword"
+                    <input [type]="hideConfirmPassword() ? 'password' : 'text'" id="confirmPassword"
                         formControlName="confirmPassword" placeholder="Potvrdite lozinku"
                         [class.error]="(confirmPassword?.invalid || passwordMismatch) && confirmPassword?.touched"
                         autocomplete="new-password" />
                     <button type="button" class="password-toggle" (click)="toggleConfirmPasswordVisibility()"
                         aria-label="Prikaži/Sakrij lozinku">
-                        @if (hideConfirmPassword) {
+                        @if (hideConfirmPassword()) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -161,20 +161,20 @@
                 }
             </div>
 
-            @if (errorMessage) {
+            @if (errorMessage()) {
             <div class="error-alert">
-                {{ errorMessage }}
+                {{ errorMessage() }}
             </div>
             }
 
-            @if (successMessage) {
+            @if (successMessage()) {
             <div class="success-alert">
-                {{ successMessage }}
+                {{ successMessage() }}
             </div>
             }
 
-            <button type="submit" class="submit-button" [disabled]="isLoading || registerForm.invalid">
-                @if (isLoading) {
+            <button type="submit" class="submit-button" [disabled]="isLoading() || registerForm.invalid">
+                @if (isLoading()) {
                 <span class="spinner"></span>
                 Registrovanje...
                 } @else {

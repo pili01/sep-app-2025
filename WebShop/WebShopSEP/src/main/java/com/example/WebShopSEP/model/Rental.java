@@ -2,40 +2,43 @@ package com.example.WebShopSEP.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.SoftDelete;
+
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "rentals")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @ToString(exclude = {"user", "vehicle", "insurance", "equipment"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@SoftDelete
 public class Rental {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @EqualsAndHashCode.Include
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
     @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
+    private Instant startDate;
 
     @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
+    private Instant endDate;
 
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "insurance_id")
     private Insurance insurance;
 
@@ -87,24 +90,11 @@ public class Rental {
 
     public void addEquipment(Equipment equipmentItem) {
         this.equipment.add(equipmentItem);
-        equipmentItem.getRentals().add(this);
         calculateTotalPrice();
     }
 
     public void removeEquipment(Equipment equipmentItem) {
         this.equipment.remove(equipmentItem);
-        equipmentItem.getRentals().remove(this);
-        calculateTotalPrice();
-    }
-
-    public Rental(User user, Vehicle vehicle, Insurance insurance,
-                  LocalDateTime startDate, LocalDateTime endDate) {
-        this.user = user;
-        this.vehicle = vehicle;
-        this.insurance = insurance;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.equipment = new HashSet<>();
         calculateTotalPrice();
     }
 }

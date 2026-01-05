@@ -1,7 +1,10 @@
 package com.example.WebShopSEP.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SoftDelete;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,12 +13,13 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SoftDelete
 @ToString(exclude = "rentals")
 public class Insurance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "company", nullable = false)
     private String company;
@@ -26,6 +30,7 @@ public class Insurance {
     @Column(name = "price_per_day", nullable = false)
     private Double pricePerDay;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "insurance", cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     private List<Rental> rentals = new ArrayList<>();
 }

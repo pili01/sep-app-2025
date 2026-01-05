@@ -32,7 +32,7 @@ public class InsuranceService {
                 .collect(Collectors.toList());
     }
 
-    public InsuranceResponseDTO findById(Integer id) {
+    public InsuranceResponseDTO findById(Long id) {
         Insurance insurance = insuranceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Insurance not found with id: " + id));
         return modelMapper.map(insurance, InsuranceResponseDTO.class);
@@ -44,7 +44,7 @@ public class InsuranceService {
         return modelMapper.map(savedInsurance, InsuranceResponseDTO.class);
     }
 
-    public InsuranceResponseDTO update(Integer id, InsuranceUpdateDTO insuranceUpdateDTO) {
+    public InsuranceResponseDTO update(Long id, InsuranceUpdateDTO insuranceUpdateDTO) {
         Insurance insurance = insuranceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Insurance not found with id: " + id));
 
@@ -53,7 +53,7 @@ public class InsuranceService {
         return modelMapper.map(updatedInsurance, InsuranceResponseDTO.class);
     }
 
-    public void deleteById(Integer id) {
+    public void deleteById(Long id) {
         if (!insuranceRepository.existsById(id)) {
             throw new RuntimeException("Insurance not found with id: " + id);
         }

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InsuranceResponseDTO {
-    private Integer id;
+    private Long id;
     private String company;
     private String name;
     private Double pricePerDay;

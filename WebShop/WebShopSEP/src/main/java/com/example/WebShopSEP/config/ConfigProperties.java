@@ -20,6 +20,9 @@ public class ConfigProperties {
     private String merchantBaseUrl;
     private String merchantHandshakeEndpoint;
 
+    @Value("${currency}")
+    private String currency;
+
     @Value("${server.ssl.key-store}")
     private String keyStore;
 

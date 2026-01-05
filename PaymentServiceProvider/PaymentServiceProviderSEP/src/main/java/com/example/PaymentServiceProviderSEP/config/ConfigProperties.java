@@ -14,6 +14,12 @@ import org.springframework.context.annotation.PropertySource;
 public class ConfigProperties {
     private String masterKey;
 
+    @Value("${bank.api.url}")
+    private String bankBaseUrl;
+
+    @Value("${frontend.api.url}")
+    private String frontendBaseUrl;
+
     @Value("${server.ssl.key-store}")
     private String keyStore;
 
