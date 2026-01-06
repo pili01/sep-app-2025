@@ -13,7 +13,7 @@ import { MerchantService } from '../../service/merchants.service';
 })
 export class PaymentComponent implements OnInit {
   merchantId: string | null = null;
-  bankPaymentId: string | null = null;
+  transactionId: string | null = null;
   isLoading = signal(false);
   paymentMethods = signal<any[]>([]);
 
@@ -25,7 +25,7 @@ export class PaymentComponent implements OnInit {
 
   ngOnInit(): void {
     this.merchantId = this.route.snapshot.paramMap.get('merchantId');
-    // this.bankPaymentId = this.route.snapshot.queryParamMap.get('bankPaymentId');
+    this.transactionId = this.route.snapshot.queryParamMap.get('transactionId');
     this.loadAvailablePaymentMethods(this.merchantId!);
   }
 
@@ -43,9 +43,17 @@ export class PaymentComponent implements OnInit {
     });
   }
 
-  selectBankCard(): void {
-    if (this.bankPaymentId) {
-      window.location.href = `https://localhost:4203/payment/${this.bankPaymentId}`;
-    }
+  selectedPaymentMethod(method: any): void {
+    this.paymentService.initiatePayment(this.transactionId!, method).subscribe({
+      next: (response) => {
+        if (response.paymentUrl)
+          window.location.href = response.paymentUrl;
+        else
+          alert('Payment URL not found in response');
+      },
+      error: (error) => {
+        alert('Error initiating payment: ' + error.message);
+      }
+    });
   }
 }

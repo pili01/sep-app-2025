@@ -15,4 +15,9 @@ export class PaymentService {
   getAvailablePaymentMethods(merchantId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/subscriptions/${merchantId}`);
   }
+
+  initiatePayment(transactionId: string, paymentMethodCode: string): Observable<any> {
+    const payload = { transactionId, paymentMethodCode };
+    return this.http.post<any>(`${this.apiUrl}/initiate`, payload);
+  }
 }

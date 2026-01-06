@@ -22,6 +22,9 @@ public class Merchant {
     @Column(unique = true)
     private String merchantId; // Ono što web shop dobije pri pretplati
 
+    @Column
+    private String merchantIdFromBank; // merchant id dobijen od banke za web shop
+
     @Column(unique = true)
     private String merchantPassword; // Za autentifikaciju zahteva (apiKey)
 

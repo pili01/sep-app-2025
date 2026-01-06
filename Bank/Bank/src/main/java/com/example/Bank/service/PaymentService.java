@@ -51,6 +51,18 @@ public class PaymentService {
         return paymentTransactionRepository.save(transaction);
     }
     
+    public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantName) {
+        PaymentTransaction transaction = new PaymentTransaction();
+        transaction.setPaymentId(UUID.randomUUID().toString());
+        transaction.setAmount(amount);
+        transaction.setCurrency(currency);
+        transaction.setMerchantName(merchantName);
+        transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+        transaction.setUsed(false);
+        
+        return paymentTransactionRepository.save(transaction);
+    }
+    
     //isto test akaunt i kard
     public String createTestAccountAndCard() {
         Account account = new Account();

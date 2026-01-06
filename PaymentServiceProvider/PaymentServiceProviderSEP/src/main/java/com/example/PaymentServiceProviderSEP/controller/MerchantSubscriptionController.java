@@ -5,6 +5,7 @@ import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionRespon
 import com.example.PaymentServiceProviderSEP.dto.subscription.UpdateSubRequestDTO;
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
 import com.example.PaymentServiceProviderSEP.service.MerchantPaymentMethodSubscriptionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +34,14 @@ public class MerchantSubscriptionController {
     @PostMapping("/merchant/{merchantId}")
     public ResponseEntity<SubscriptionResponseDTO> create(
             @PathVariable Long merchantId,
-            @RequestBody SubscriptionRequestDTO dto) {
-
-        MerchantPaymentMethodSubscription saved = service.createSubscription(
-                merchantId, dto.getPaymentMethodCode(), dto.getConfigJson());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(saved));
+            @RequestBody @Valid SubscriptionRequestDTO dto) {
+        try{
+            MerchantPaymentMethodSubscription saved = service.createSubscription(
+                    merchantId, dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(saved));
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating subscription: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")

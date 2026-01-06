@@ -3,9 +3,7 @@ package com.example.PaymentServiceProviderSEP.service;
 import com.example.PaymentServiceProviderSEP.config.ConfigProperties;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
-import com.example.PaymentServiceProviderSEP.model.Merchant;
-import com.example.PaymentServiceProviderSEP.model.MerchantStatus;
-import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
+import com.example.PaymentServiceProviderSEP.model.*;
 import com.example.PaymentServiceProviderSEP.repository.MerchantPaymentMethodSubscriptionRepository;
 import com.example.PaymentServiceProviderSEP.repository.MerchantRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +22,8 @@ public class PaymentService {
     private final CryptoService cryptoService;
     private final BankClientService bankClientService;
     private final ConfigProperties configProperties;
+    private final TransactionService transactionService;
+    private final MerchantPaymentMethodSubscriptionService merchantPaymentMethodSubscriptionService;
 
     @Transactional
     public Map<String, String> initializePayment(PaymentInitRequestDTO request) {
@@ -39,7 +39,13 @@ public class PaymentService {
             throw new RuntimeException("Invalid merchant credentials");
         }
 
-        String redirectionUrl = configProperties.getFrontendBaseUrl() + "/payment/" + merchant.getId();
+        Transaction transaction = new Transaction(merchant.getMerchantId(), request.getAmount(), request.getCurrency(), merchant.getMerchantIdFromBank(), request.getMerchantOrderId());
+        Transaction createdTransaction = transactionService.createTransaction(transaction);
+        if (createdTransaction == null) {
+            throw new RuntimeException("Failed to create transaction");
+        }
+
+        String redirectionUrl = configProperties.getFrontendBaseUrl() + "/payment/" + merchant.getId() + "?transactionId=" + createdTransaction.getId();
 
         return Map.of(
                 "redirectionUrl", redirectionUrl,
@@ -48,48 +54,38 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentInitResponseDTO requestPaymentParametersFromBank(PaymentInitRequestDTO request) {
-        Merchant merchant = merchantRepository.findByMerchantId(request.getMerchantId())
+    public PaymentInitResponseDTO requestPaymentParametersFromBank(Map<String, String> requestMap) {
+        Transaction transaction = transactionService.getTransactionById(Long.parseLong(requestMap.get("transactionId")));
+        if (transaction == null) {
+            throw new RuntimeException("Invalid transaction ID");
+        }
+        Merchant merchant = merchantRepository.findByMerchantId(transaction.getMerchantId())
                 .orElseThrow(() -> new RuntimeException("Invalid merchant credentials"));
 
         if (merchant.getStatus() != MerchantStatus.ACTIVE) {
             throw new RuntimeException("Merchant is not active");
         }
-
-        // Verify merchant password
-        String decryptedPassword = cryptoService.decrypt(merchant.getMerchantPassword());
-        if (!decryptedPassword.equals(request.getMerchantPassword())) {
-            throw new RuntimeException("Invalid merchant credentials");
+        if (merchantPaymentMethodSubscriptionService.getActiveSubscriptionsByMerchantId(merchant.getId()).stream().noneMatch(as -> as.getPaymentMethodCode().toString().equals(requestMap.get("paymentMethodCode")) && as.getEnabled() != null && as.getEnabled())) {
+            throw new RuntimeException("Merchant does not have active " + requestMap.get("paymentMethodCode") + " subscription");
         }
-
-        // Check if merchant has active bank card subscription
-        boolean hasBankCardSubscription = subscriptionRepository
-                .findByMerchantIdAndPaymentMethodCode(merchant.getId(), PaymentMethodCode.BANK_CARD)
-                .filter(sub -> sub.getEnabled() != null && sub.getEnabled())
-                .isPresent();
-
-        if (!hasBankCardSubscription) {
-            throw new RuntimeException("Merchant does not have active bank card subscription");
-        }
-
-        // Generate payment ID
-        String paymentId = UUID.randomUUID().toString();
+        transaction.setPaymentMethod(PaymentMethodCode.valueOf(requestMap.get("paymentMethodCode")));
+        transaction.setStatus(TransactionStatus.PENDING);
+        transactionService.createTransaction(transaction);
 
         // Create payment transaction in Bank
         try {
-            String bankPaymentId = bankClientService.createPaymentTransaction(
-                    request.getAmount(),
-                    request.getCurrency(),
-                    merchant.getName()
+            Map<String, Object> bankResponse = bankClientService.createPaymentTransaction(
+                    transaction.getMerchantIdFromBank(),
+                    transaction.getAmount(),
+                    transaction.getCurrency(),
+                    transaction.getSTAN(),
+                    transaction.getPspTimestamp()
             );
 
-            // Return payment URL for frontend
-            String paymentUrl = "https://localhost:4202/payment/" + paymentId + "?bankPaymentId=" + bankPaymentId;
-
             return new PaymentInitResponseDTO(
-                    paymentUrl,
-                    paymentId,
-                    "Payment initialized successfully"
+                    bankResponse.get("paymentUrl").toString(),
+                    bankResponse.get("paymentId").toString(),
+                    "Payment initiated successfully"
             );
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize payment: " + e.getMessage(), e);

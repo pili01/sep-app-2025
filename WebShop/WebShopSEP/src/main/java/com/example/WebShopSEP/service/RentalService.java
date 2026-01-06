@@ -122,7 +122,7 @@ public class RentalService {
         return pspClientService.initializePayment(
                 rental.getTotalPrice(),
                 savedTransaction.getTransactionId(),
-                savedTransaction.getTimestamp().toString()
+                savedTransaction.getTimestamp()
         );
     }
 }

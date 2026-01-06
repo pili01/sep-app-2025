@@ -1,6 +1,6 @@
-package com.example.WebShopSEP.service;
+package com.example.PaymentServiceProviderSEP.service;
 
-import com.example.WebShopSEP.config.ConfigProperties;
+import com.example.PaymentServiceProviderSEP.config.ConfigProperties;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
@@ -14,14 +14,15 @@ import org.springframework.web.client.RestClient;
 import java.security.KeyStore;
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
-public class PSPClientService {
+public class BankClientService {
 
-    private final RestClient restClient;
     private final ConfigProperties config;
+    private final RestClient restClient;
 
-    public PSPClientService(RestClient.Builder builder, ConfigProperties config) {
+    public BankClientService(ConfigProperties config, RestClient.Builder builder) {
         this.config = config;
         try {
             KeyStore trustStore = KeyStore.getInstance(config.getKeyStoreType());
@@ -44,66 +45,60 @@ public class PSPClientService {
                     .build();
 
             this.restClient = builder
-                    .baseUrl(config.getMerchantBaseUrl())
+                    .baseUrl(config.getBankBaseUrl())
                     .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
                     .build();
 
         } catch (Exception e) {
-            throw new RuntimeException("Could not initialize secure RestClient", e);
+            throw new RuntimeException("Could not initialize secure RestClient for Bank", e);
         }
     }
 
-    public void connectToMerchantBackend() {
+    public Map<String, Object> createPaymentTransaction(String merchantId, Double amount, String currency, String STAN, Timestamp pspTimestamp) {
         Map<String, Object> requestBody = Map.of(
-                "merchantId", config.getMerchantId(),
-                "merchantPassword", config.getMerchantPassword().toString()
-        );
-
-        System.out.println("Connecting to: " + config.getMerchantBaseUrl() + config.getMerchantHandshakeEndpoint());
-
-        try {
-            Map<String, Object> response = restClient.post()
-                    .uri(config.getMerchantHandshakeEndpoint())
-                    .body(requestBody)
-                    .retrieve()
-                    .body(Map.class);
-
-            if (response != null) {
-                System.out.println("--- HANDSHAKE SUCCESS ---");
-                System.out.println("Merchant Message: " + response.get("message"));
-                System.out.println("Merchant Status: " + response.get("status"));
-            }
-
-        } catch (Exception e) {
-            System.err.println("--- HANDSHAKE FAILED ---");
-            System.err.println("Error: " + e.getMessage());
-        }
-    }
-
-    public String initializePayment(Double amount, String merchantOrderId, Timestamp merchantTimestamp) {
-        Map<String, Object> requestBody = Map.of(
-                "merchantId", config.getMerchantId(),
-                "merchantPassword", config.getMerchantPassword(),
+                "merchantId", merchantId,
                 "amount", amount,
-                "currency", config.getCurrency(),
-                "merchantOrderId", merchantOrderId,
-                "merchantTimestamp", merchantTimestamp
+                "currency", currency,
+                "STAN", STAN,
+                "pspTimestamp", pspTimestamp.toString()
         );
 
         try {
             Map<String, Object> response = restClient.post()
-                    .uri("/api/payment/init")
+                    .uri("/api/bank/payment/create")
                     .body(requestBody)
                     .retrieve()
                     .body(Map.class);
 
-            if (response != null && response.containsKey("redirectionUrl")) {
-                return (String) response.get("redirectionUrl");
+            if (response != null && response.containsKey("paymentId") && response.containsKey("paymentUrl")) {
+                return response;
             }
 
-            throw new RuntimeException("Invalid response from PSP");
+            throw new RuntimeException("Invalid response from Bank when creating payment transaction");
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize payment with PSP: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to create payment transaction in Bank: " + e.getMessage(), e);
+        }
+    }
+
+    public String getMerchantIdFromBankForAccountNumber(String merchantAccountNumber) {
+        Map<String, Object> requestBody = Map.of(
+                "accountNumber", merchantAccountNumber
+        );
+
+        try {
+            Map<String, Object> response = restClient.post()
+                    .uri("/api/bank/accounts/merchant-id")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && response.containsKey("merchantId")) {
+                return (String) response.get("merchantId");
+            }
+
+            throw new RuntimeException("Merchant ID not found in Bank for account number: " + merchantAccountNumber);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get merchant ID from Bank: " + e.getMessage(), e);
         }
     }
 }

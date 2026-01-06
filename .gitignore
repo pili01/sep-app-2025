@@ -28,3 +28,5 @@ yarn-debug.log*
 yarn-error.log*
 
 WebShop/WebShopSEP/src/main/resources/secrets.properties
+
+Bank/Bank/src/main/resources/secrets.properties

@@ -26,7 +26,7 @@ public class PaymentController {
     @PostMapping("/init")
     public ResponseEntity<?> initializePayment(@Valid @RequestBody PaymentInitRequestDTO request) {
         try {
-            Map<?,?> response = paymentService.initializePayment(request);
+            Map<?, ?> response = paymentService.initializePayment(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
@@ -42,5 +42,15 @@ public class PaymentController {
                 .map(sub -> sub.getPaymentMethodCode().name())
                 .toList();
         return ResponseEntity.ok(dtos);
+    }
+
+    @PostMapping("/initiate")
+    public ResponseEntity<?> initiatePayment(@RequestBody Map<String, String> request) {
+        try {
+            PaymentInitResponseDTO paymentInitResponseDTO = paymentService.requestPaymentParametersFromBank(request);
+            return ResponseEntity.ok(paymentInitResponseDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

@@ -12,22 +12,22 @@ import { MerchantService } from '../../service/merchants.service';
 })
 export class AddSub implements OnInit {
   @Input({ required: true }) merchantId!: number;
-  
+
   @Output() onSaved = new EventEmitter<void>();
   @Output() onCancel = new EventEmitter<void>();
 
   isLoading = signal(true);
   existingMethodCodes = signal<string[]>([]);
-  
+
   allPossibleCodes = signal<string[]>(['BANK_CARD', 'BANK_QR', 'PAYPAL', 'CRYPTO_BTC']);
 
   availableCodes = computed(() => {
     return this.allPossibleCodes().filter(code => !this.existingMethodCodes().includes(code));
   });
 
-  newSub = { paymentMethodCode: '', configJson: '{}' };
+  newSub = { paymentMethodCode: '', merchantAccountNumber: '', configJson: '{}' };
 
-  constructor(private merchantService: MerchantService) {}
+  constructor(private merchantService: MerchantService) { }
 
   ngOnInit() {
     this.loadCurrentState();
@@ -38,7 +38,7 @@ export class AddSub implements OnInit {
     this.merchantService.getSubscriptions(this.merchantId).subscribe({
       next: (subs) => {
         this.existingMethodCodes.set(subs.map(s => s.paymentMethodCode));
-        
+
         if (this.availableCodes().length > 0) {
           this.newSub.paymentMethodCode = this.availableCodes()[0];
         }
@@ -49,6 +49,10 @@ export class AddSub implements OnInit {
   }
 
   onSubmit() {
+    if (this.newSub.paymentMethodCode == 'BANK_CARD' && !this.newSub.merchantAccountNumber) {
+      alert("Merchant account number is required for BANK_CARD");
+      return;
+    }
     this.merchantService.createSubscription(this.merchantId, this.newSub).subscribe({
       next: () => this.onSaved.emit(),
       error: (err) => alert(err.error?.error || "Creation failed")

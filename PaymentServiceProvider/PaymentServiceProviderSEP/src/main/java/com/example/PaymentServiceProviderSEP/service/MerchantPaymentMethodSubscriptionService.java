@@ -1,5 +1,6 @@
 package com.example.PaymentServiceProviderSEP.service;
 
+import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionRequestDTO;
 import com.example.PaymentServiceProviderSEP.model.Merchant;
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
@@ -18,6 +19,7 @@ public class MerchantPaymentMethodSubscriptionService {
 
     private final MerchantPaymentMethodSubscriptionRepository subscriptionRepository;
     private final MerchantRepository merchantRepository;
+    private final BankClientService bankClientService;
 
     public List<MerchantPaymentMethodSubscription> getSubscriptionsByMerchantId(Long merchantId) {
         return subscriptionRepository.findByMerchantId(merchantId);
@@ -28,20 +30,25 @@ public class MerchantPaymentMethodSubscriptionService {
     }
 
     @Transactional
-    public MerchantPaymentMethodSubscription createSubscription(Long merchantId, PaymentMethodCode paymentMethodCode, String configJson) {
+    public MerchantPaymentMethodSubscription createSubscription(Long merchantId, SubscriptionRequestDTO subscriptionRequestDTO) {
         Merchant merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new EntityNotFoundException("Merchant with id " + merchantId + " not found"));
 
         // Provera da li već postoji pretplata za ovaj način plaćanja
-        if (subscriptionRepository.existsByMerchantIdAndPaymentMethodCode(merchantId, paymentMethodCode)) {
-            throw new IllegalArgumentException("Subscription for payment method " + paymentMethodCode + " already exists for this merchant");
+        if (subscriptionRepository.existsByMerchantIdAndPaymentMethodCode(merchantId, subscriptionRequestDTO.getPaymentMethodCode())) {
+            throw new IllegalArgumentException("Subscription for payment method " + subscriptionRequestDTO.getPaymentMethodCode() + " already exists for this merchant");
+        }
+
+        if (subscriptionRequestDTO.getPaymentMethodCode() == PaymentMethodCode.BANK_CARD) {
+            String merchantIdFromBank = bankClientService.getMerchantIdFromBankForAccountNumber(subscriptionRequestDTO.getMerchantAccountNumber());
+            merchant.setMerchantIdFromBank(merchantIdFromBank);
         }
 
         MerchantPaymentMethodSubscription subscription = new MerchantPaymentMethodSubscription();
         subscription.setMerchant(merchant);
-        subscription.setPaymentMethodCode(paymentMethodCode);
+        subscription.setPaymentMethodCode(subscriptionRequestDTO.getPaymentMethodCode());
         subscription.setEnabled(true);
-        subscription.setConfigJson(configJson);
+        subscription.setConfigJson(subscriptionRequestDTO.getConfigJson());
 
         return subscriptionRepository.save(subscription);
     }
