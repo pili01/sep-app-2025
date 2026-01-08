@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table
@@ -47,6 +48,12 @@ public class Transaction {
 
     @Column(nullable = false, unique = true, updatable = false)
     private String STAN;
+
+    @Column
+    private String globalTransactionId; // od banke
+
+    @Column
+    private LocalDateTime acquirerTimestamp; // od banke
 
     public Transaction(String merchantId, Double amount, String currency, String merchantIdFromBank, String transactionId) {
         this.merchantId = merchantId;

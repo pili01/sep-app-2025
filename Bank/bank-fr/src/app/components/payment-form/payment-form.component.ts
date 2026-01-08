@@ -197,6 +197,11 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
         if (response.success) {
           this.paymentForm.disable();
         }
+        
+        // Redirektujem korisnika na WebShop status stranicu ako postoji redirectUrl
+        if (response.redirectUrl) {
+          window.location.href = response.redirectUrl;
+        }
       },
       error: (err) => {
         this.isProcessing = false;
@@ -204,6 +209,11 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
           success: false,
           message: err.error?.message || 'Payment processing failed'
         };
+        
+        // Čak i u slučaju greške, proveravam da li postoji redirectUrl (za FAILED slučajeve)
+        if (err.error?.redirectUrl) {
+          window.location.href = err.error.redirectUrl;
+        }
       }
     });
   }

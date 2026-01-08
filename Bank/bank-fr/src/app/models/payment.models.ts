@@ -19,8 +19,12 @@ export interface PaymentProcessResponse {
   success: boolean;
   message: string;
   globalTransactionId: string | null;
+  acquirerTimestamp: string | null; // ACQUIRER_TIMESTAMP - timestamp kada je banka obradila transakciju
+  redirectUrl: string | null;
 }
 
 export type CardType = 'VISA' | 'MASTERCARD' | null;
+
+
 
 

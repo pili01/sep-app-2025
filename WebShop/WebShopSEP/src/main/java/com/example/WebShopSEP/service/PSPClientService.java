@@ -106,4 +106,21 @@ public class PSPClientService {
             throw new RuntimeException("Failed to initialize payment with PSP: " + e.getMessage(), e);
         }
     }
+
+    public String getTransactionStatus(String transactionId) {
+        try {
+            Map<String, Object> response = restClient.get()
+                    .uri("/api/payment/transaction/" + transactionId + "/status")
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && response.containsKey("status")) {
+                return (String) response.get("status");
+            }
+
+            throw new RuntimeException("Invalid response from PSP when getting transaction status");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get transaction status from PSP: " + e.getMessage(), e);
+        }
+    }
 }

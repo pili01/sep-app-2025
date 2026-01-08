@@ -34,5 +34,23 @@ public class PaymentTransaction {
 
     @Column(nullable = false)
     private Boolean used = false; // da li je forma koristena jer ima jedan pokusaj
+
+    @Column
+    private String stan; // stan od pspa
+
+    @Column
+    private String globalTransactionId;
+
+    @Column
+    private LocalDateTime acquirerTimestamp; // timestamp kada je bbanka obradila transakciju
+
+    @Column
+    private String successUrl; // URL za redirekciju nakon uspešnog plaćanja
+
+    @Column
+    private String failedUrl; // URL za redirekciju nakon neuspešnog plaćanja
+
+    @Column
+    private String errorUrl; // URL za redirekciju u slučaju greške
 }
 

@@ -2,6 +2,7 @@ package com.example.PaymentServiceProviderSEP.controller;
 
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
+import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
 import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
 import com.example.PaymentServiceProviderSEP.service.MerchantPaymentMethodSubscriptionService;
 import com.example.PaymentServiceProviderSEP.service.MerchantService;
@@ -51,6 +52,30 @@ public class PaymentController {
             return ResponseEntity.ok(paymentInitResponseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/status")
+    public ResponseEntity<?> receivePaymentStatus(@Valid @RequestBody PaymentStatusDTO statusDTO) {
+        try {
+            String redirectUrl = paymentService.processPaymentStatus(statusDTO);
+            return ResponseEntity.ok(Map.of("success", true, "redirectUrl", redirectUrl));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", "Internal server error"));
+        }
+    }
+
+    @GetMapping("/transaction/{transactionId}/status")
+    public ResponseEntity<?> getTransactionStatus(@PathVariable String transactionId) {
+        try {
+            var status = paymentService.getTransactionStatusByTransactionId(transactionId);
+            return ResponseEntity.ok(Map.of("status", status.toString()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Internal server error"));
         }
     }
 }
