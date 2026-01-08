@@ -1,7 +1,7 @@
 export interface PaymentDetailsResponse {
   amount: number;
   currency: string;
-  merchantName: string;
+  merchantId: string;
   expiresAt: string; 
   acceptedCardTypes: string[];
   expired: boolean;

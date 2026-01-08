@@ -26,8 +26,8 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private String currency; // valutaa
 
-    @Column(nullable = false)
-    private String merchantName;
+    @Column(name = "merchant_id", nullable = false)
+    private String merchantId;
 
     @Column(nullable = false)
     private LocalDateTime expiresAt;
@@ -43,14 +43,5 @@ public class PaymentTransaction {
 
     @Column
     private LocalDateTime acquirerTimestamp; // timestamp kada je bbanka obradila transakciju
-
-    @Column
-    private String successUrl; // URL za redirekciju nakon uspešnog plaćanja
-
-    @Column
-    private String failedUrl; // URL za redirekciju nakon neuspešnog plaćanja
-
-    @Column
-    private String errorUrl; // URL za redirekciju u slučaju greške
 }
 

@@ -123,4 +123,29 @@ public class PSPClientService {
             throw new RuntimeException("Failed to get transaction status from PSP: " + e.getMessage(), e);
         }
     }
+
+    public Map<String, String> getTransactionStatusWithPaymentMethod(String transactionId) {
+        try {
+            Map<String, Object> response = restClient.get()
+                    .uri("/api/payment/transaction/" + transactionId + "/status")
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && response.containsKey("status")) {
+                String status = (String) response.get("status");
+                String paymentMethod = response.containsKey("paymentMethod") && response.get("paymentMethod") != null 
+                        ? (String) response.get("paymentMethod") 
+                        : null;
+                
+                return Map.of(
+                        "status", status,
+                        "paymentMethod", paymentMethod != null ? paymentMethod : ""
+                );
+            }
+
+            throw new RuntimeException("Invalid response from PSP when getting transaction status");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get transaction status from PSP: " + e.getMessage(), e);
+        }
+    }
 }

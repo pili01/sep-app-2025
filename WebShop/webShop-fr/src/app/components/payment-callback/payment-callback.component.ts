@@ -51,17 +51,18 @@ export class PaymentCallbackComponent implements OnInit {
     this.errorMessage.set(null);
     this.paymentStatus.set(null);
 
-    this.paymentService.getPaymentStatus(transactionId).subscribe({
+        this.paymentService.getPaymentStatus(transactionId).subscribe({
       next: (response) => {
         this.isLoading.set(false);
         this.paymentStatus.set(response.status);
         this.rentalId.set(response.rentalId);
 
-        // Ako je plaćanje uspešno, redirektujem na my-rentals nakon 3 sekunde
+        // Ako je plaćanje uspešno, redirektujem na my-rentals nakon 10 sekundi
+        // Korisnik može i ranije da klikne dugme
         if (response.status === 'COMPLETED') {
           setTimeout(() => {
             this.router.navigate(['/my-rentals']);
-          }, 3000);
+          }, 10000); // 10 sekundi umesto 3
         }
       },
       error: (error) => {
@@ -76,4 +77,5 @@ export class PaymentCallbackComponent implements OnInit {
     this.router.navigate(['/my-rentals']);
   }
 }
+
 

@@ -26,10 +26,4 @@ public class CreatePaymentRequest {
 
     @NotBlank(message = "pspTimestamp is required")
     private String pspTimestamp;
-
-    private String successUrl; // URL za redirekciju nakon uspešnog plaćanja
-
-    private String failedUrl; // URL za redirekciju nakon neuspešnog plaćanja
-
-    private String errorUrl; // URL za redirekciju u slučaju greške
 }

@@ -5,6 +5,8 @@
   justify-content: center;
   padding: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .callback-card {
@@ -14,10 +16,14 @@
   max-width: 500px;
   width: 100%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
 }
 
 .loading-state {
   text-align: center;
+  position: relative;
+  z-index: 3;
   
   .spinner {
     width: 50px;
@@ -42,9 +48,15 @@
 
 .status-content {
   text-align: center;
+  position: relative;
+  z-index: 3;
 }
 
 .success-state {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+
   .success-icon {
     width: 80px;
     height: 80px;
@@ -80,6 +92,10 @@
 }
 
 .failed-state {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+
   .error-icon {
     width: 80px;
     height: 80px;
@@ -127,6 +143,10 @@
 }
 
 .error-state {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+
   .error-icon {
     width: 80px;
     height: 80px;
@@ -181,9 +201,16 @@
   cursor: pointer;
   transition: background 0.2s;
   margin-top: 1.5rem;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
 
   &:hover {
     background: #5568d3;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 

@@ -54,13 +54,10 @@ export const routes: Routes = [
   },
   {
     path: 'payment-callback',
-    loadComponent: () => import('./components/payment-callback/payment-callback.component').then(m => m.PaymentCallbackComponent),
-    canActivate: [authGuard],
-    data: { roles: ['CUSTOMER'] }
+    loadComponent: () => import('./components/payment-callback/payment-callback.component').then(m => m.PaymentCallbackComponent)
   },
   {
-    path: '',
-    redirectTo: '/login',
-    pathMatch: 'full'
+    path: '**',
+    redirectTo: '/login'
   }
 ];

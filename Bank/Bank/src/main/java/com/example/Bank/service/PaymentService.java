@@ -47,19 +47,19 @@ public class PaymentService {
         transaction.setPaymentId(UUID.randomUUID().toString());
         transaction.setAmount(100.0);
         transaction.setCurrency("EUR");
-        transaction.setMerchantName("Test Merchant");
+        transaction.setMerchantId("TEST_MERCHANT");
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
         
         return paymentTransactionRepository.save(transaction);
     }
     
-    public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantName, String stan) {
+    public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantId, String stan) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setPaymentId(UUID.randomUUID().toString());
         transaction.setAmount(amount);
         transaction.setCurrency(currency);
-        transaction.setMerchantName(merchantName);
+        transaction.setMerchantId(merchantId);
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
         transaction.setStan(stan); // Čuva STAN koji je poslao PSP
@@ -107,7 +107,7 @@ public class PaymentService {
         return new PaymentDetailsResponse(
             transaction.getAmount(),
             transaction.getCurrency(),
-            transaction.getMerchantName(),
+            transaction.getMerchantId(),
             transaction.getExpiresAt(),
             acceptedCardTypes,
             expired,
@@ -152,9 +152,7 @@ public class PaymentService {
         Card card = cardOpt.get();
 
         Account account = card.getAccount();
-        
-        // Generišem globalTransactionId i acquirerTimestamp pre provere balansa
-        // jer će nam trebati i za SUCCESS i za FAILED slučaj
+
         String globalTransactionId = UUID.randomUUID().toString();
         LocalDateTime acquirerTimestamp = LocalDateTime.now();
         transaction.setGlobalTransactionId(globalTransactionId);
@@ -162,10 +160,8 @@ public class PaymentService {
         transaction.setUsed(true);
         
         if (account.getBalance() < transaction.getAmount()) {
-            // FAILED slučaj - nedovoljno sredstava
             paymentTransactionRepository.save(transaction);
-            
-            // Obaveštavam PSP o FAILED statusu
+
             String redirectUrl = null;
             try {
                 redirectUrl = pspClientService.sendPaymentStatus(
@@ -187,14 +183,13 @@ public class PaymentService {
         accountRepository.save(account);
         
         // Prebacujem sredstva na merchant account
-        // merchantName u PaymentTransaction je zapravo merchantId
-        Optional<Account> merchantAccountOpt = accountRepository.findByMerchantId(transaction.getMerchantName());
+        Optional<Account> merchantAccountOpt = accountRepository.findByMerchantId(transaction.getMerchantId());
         if (merchantAccountOpt.isPresent()) {
             Account merchantAccount = merchantAccountOpt.get();
             merchantAccount.setBalance(merchantAccount.getBalance() + transaction.getAmount());
             accountRepository.save(merchantAccount);
         } else {
-            System.err.println("Warning: Merchant account not found for merchantId: " + transaction.getMerchantName() + ". Payment processed but funds not transferred to merchant.");
+            System.err.println("Warning: Merchant account not found for merchantId: " + transaction.getMerchantId() + ". Payment processed but funds not transferred to merchant.");
         }
         
         paymentTransactionRepository.save(transaction);

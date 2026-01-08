@@ -20,7 +20,7 @@
             @if (transactionId()) {
               <p class="transaction-id">Transaction ID: <strong>{{ transactionId() }}</strong></p>
             }
-            <p class="redirect-message">Preusmeravamo vas na stranicu sa iznajmljivanjima...</p>
+            <p class="redirect-message">Preusmeravamo vas na stranicu sa iznajmljivanjima za 10 sekundi...</p>
             <button class="btn-primary" (click)="goToRentals()">Idi na iznajmljivanja</button>
           </div>
         } @else if (paymentStatus() === 'FAILED') {
@@ -41,6 +41,22 @@
             @if (transactionId()) {
               <p class="transaction-id">Transaction ID: <strong>{{ transactionId() }}</strong></p>
             }
+            <button class="btn-primary" (click)="goToRentals()">Nazad na iznajmljivanja</button>
+          </div>
+        } @else if (paymentStatus() === 'CANCELLED' || paymentStatus() === 'PENDING') {
+          <div class="error-state">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h2>Transakcija u obradi</h2>
+            <p>Vaša transakcija je trenutno u obradi ili je otkazana.</p>
+            <p class="help-text">Molimo sačekajte ili kontaktirajte podršku za više informacija.</p>
+            @if (transactionId()) {
+              <p class="transaction-id">Transaction ID: <strong>{{ transactionId() }}</strong></p>
+            }
+            <p class="status-info">Status: <strong>{{ paymentStatus() }}</strong></p>
             <button class="btn-primary" (click)="goToRentals()">Nazad na iznajmljivanja</button>
           </div>
         } @else {

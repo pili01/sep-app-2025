@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -31,20 +32,36 @@ public class PaymentService {
 
         // Proveravam status u PSP-u i ažuriram lokalnu transakciju
         try {
-            String pspStatus = pspClientService.getTransactionStatus(transactionId);
+            Map<String, String> pspResponse = pspClientService.getTransactionStatusWithPaymentMethod(transactionId);
+            String pspStatus = pspResponse.get("status");
+            String paymentMethod = pspResponse.get("paymentMethod");
 
+            boolean paymentMethodUpdated = false;
+            // Ažuriranje paymentMethod-a ako je dostupan i još nije postavljen
+            if (paymentMethod != null && !paymentMethod.isEmpty() && 
+                (transaction.getPaymentMethod() == null || transaction.getPaymentMethod().isEmpty())) {
+                transaction.setPaymentMethod(paymentMethod);
+                paymentMethodUpdated = true;
+            }
+
+            boolean statusChanged = false;
             if ("COMPLETED".equalsIgnoreCase(pspStatus)) {
                 if (transaction.getStatus() != TransactionStatus.COMPLETED) {
                     transaction.setStatus(TransactionStatus.COMPLETED);
                     // Ažuriranje statusa rentala ako je transakcija uspela
                     updateRentalStatus(transaction.getRentalId(), RentalStatus.PURCHASED);
-                    transactionRepository.save(transaction);
+                    statusChanged = true;
                 }
             } else if ("FAILED".equalsIgnoreCase(pspStatus)) {
                 if (transaction.getStatus() != TransactionStatus.FAILED) {
                     transaction.setStatus(TransactionStatus.FAILED);
-                    transactionRepository.save(transaction);
+                    statusChanged = true;
                 }
+            }
+
+            // Sačuvaj transakciju ako je status promenjen ili paymentMethod ažuriran
+            if (statusChanged || paymentMethodUpdated) {
+                transactionRepository.save(transaction);
             }
         } catch (Exception e) {
             // Ako ne mogu da dobijem status iz PSP-a, vraćam trenutni status

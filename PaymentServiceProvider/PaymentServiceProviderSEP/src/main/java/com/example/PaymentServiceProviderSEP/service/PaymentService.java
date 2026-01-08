@@ -153,4 +153,12 @@ public class PaymentService {
         }
         return transactionOpt.get().getStatus();
     }
+
+    public Transaction getTransactionByTransactionId(String transactionId) {
+        Optional<Transaction> transactionOpt = transactionRepository.findByTransactionId(transactionId);
+        if (transactionOpt.isEmpty()) {
+            throw new RuntimeException("Transaction not found: " + transactionId);
+        }
+        return transactionOpt.get();
+    }
 }

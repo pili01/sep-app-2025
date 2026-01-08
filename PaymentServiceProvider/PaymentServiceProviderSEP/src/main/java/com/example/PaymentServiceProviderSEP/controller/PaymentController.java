@@ -70,8 +70,12 @@ public class PaymentController {
     @GetMapping("/transaction/{transactionId}/status")
     public ResponseEntity<?> getTransactionStatus(@PathVariable String transactionId) {
         try {
-            var status = paymentService.getTransactionStatusByTransactionId(transactionId);
-            return ResponseEntity.ok(Map.of("status", status.toString()));
+            var transaction = paymentService.getTransactionByTransactionId(transactionId);
+            Map<String, Object> response = Map.of(
+                    "status", transaction.getStatus().toString(),
+                    "paymentMethod", transaction.getPaymentMethod() != null ? transaction.getPaymentMethod().toString() : null
+            );
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {

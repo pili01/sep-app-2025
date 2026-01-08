@@ -72,7 +72,6 @@ public class PSPClientService {
                 throw new RuntimeException("Invalid response from PSP when sending payment status");
             }
 
-            // Izvlačim redirectUrl iz response-a
             if (response.containsKey("redirectUrl")) {
                 return (String) response.get("redirectUrl");
             } else {

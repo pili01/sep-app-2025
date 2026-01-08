@@ -13,12 +13,13 @@ import java.util.List;
 public class PaymentDetailsResponse {
     private Double amount;
     private String currency;
-    private String merchantName;
+    private String merchantId;
     private LocalDateTime expiresAt;
     private List<String> acceptedCardTypes; // visa i mastercard
     private Boolean expired;
     private Boolean used;
 }
+
 
 
 
