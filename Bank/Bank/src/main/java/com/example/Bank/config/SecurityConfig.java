@@ -24,7 +24,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/bank/payment/**").permitAll() // Payment forma je javna (uključujući test endpoint)
+                        .requestMatchers("/api/bank/payment/test/**").permitAll() // Test endpoint-i su javni
+                        .requestMatchers("/api/bank/payment/**").permitAll() // Payment forma je javna
                         .requestMatchers("/api/bank/accounts/**").permitAll()
                         .anyRequest().authenticated()
                 )

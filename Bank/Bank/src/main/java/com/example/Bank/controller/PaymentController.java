@@ -32,7 +32,7 @@ public class PaymentController {
     }
 
 
-    @GetMapping("/test/create-account-card")
+    //@GetMapping("/test/create-account-card")
     @PostMapping("/test/create-account-card")
     public ResponseEntity<?> createTestAccountAndCard() {
         String result = paymentService.createTestAccountAndCard();
@@ -46,7 +46,8 @@ public class PaymentController {
             var transaction = paymentService.createPaymentTransaction(
                     request.getAmount(),
                     request.getCurrency(),
-                    request.getMerchantId()
+                    request.getMerchantId(),
+                    request.getSTAN()
             );
             String paymentUrl = configProperties.getFrontendBaseUrl() + "/payment/" + transaction.getPaymentId();
             return ResponseEntity.ok(Map.of("paymentId", transaction.getPaymentId(), "paymentUrl", paymentUrl));

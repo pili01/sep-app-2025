@@ -53,8 +53,11 @@ export const routes: Routes = [
     data: { roles: ['AUTHOR'] }
   },
   {
-    path: '',
-    redirectTo: '/login',
-    pathMatch: 'full'
+    path: 'payment-callback',
+    loadComponent: () => import('./components/payment-callback/payment-callback.component').then(m => m.PaymentCallbackComponent)
+  },
+  {
+    path: '**',
+    redirectTo: '/login'
   }
 ];

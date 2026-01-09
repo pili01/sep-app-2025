@@ -26,16 +26,19 @@ public class PaymentService {
     private final CardValidationService cardValidationService;
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
+    private final PSPClientService pspClientService;
     
     public PaymentService(
             PaymentTransactionRepository paymentTransactionRepository,
             CardValidationService cardValidationService,
             CardRepository cardRepository,
-            AccountRepository accountRepository) {
+            AccountRepository accountRepository,
+            PSPClientService pspClientService) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.cardValidationService = cardValidationService;
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
+        this.pspClientService = pspClientService;
     }
 
     //test transakcije
@@ -44,21 +47,22 @@ public class PaymentService {
         transaction.setPaymentId(UUID.randomUUID().toString());
         transaction.setAmount(100.0);
         transaction.setCurrency("EUR");
-        transaction.setMerchantName("Test Merchant");
+        transaction.setMerchantId("TEST_MERCHANT");
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
         
         return paymentTransactionRepository.save(transaction);
     }
     
-    public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantName) {
+    public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantId, String stan) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setPaymentId(UUID.randomUUID().toString());
         transaction.setAmount(amount);
         transaction.setCurrency(currency);
-        transaction.setMerchantName(merchantName);
+        transaction.setMerchantId(merchantId);
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
+        transaction.setStan(stan); // Čuva STAN koji je poslao PSP
         
         return paymentTransactionRepository.save(transaction);
     }
@@ -103,7 +107,7 @@ public class PaymentService {
         return new PaymentDetailsResponse(
             transaction.getAmount(),
             transaction.getCurrency(),
-            transaction.getMerchantName(),
+            transaction.getMerchantId(),
             transaction.getExpiresAt(),
             acceptedCardTypes,
             expired,
@@ -118,20 +122,20 @@ public class PaymentService {
             .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (LocalDateTime.now().isAfter(transaction.getExpiresAt())) {
-            return new PaymentProcessResponse(false, "Payment session has expired", null);
+            return new PaymentProcessResponse(false, "Payment session has expired", null, null, null);
         }
 
         if (transaction.getUsed()) {
-            return new PaymentProcessResponse(false, "Payment has already been processed", null);
+            return new PaymentProcessResponse(false, "Payment has already been processed", null, null, null);
         }
 
         String panDigits = request.getPan().replaceAll("\\D", "");
         if (!cardValidationService.validateLuhn(panDigits)) {
-            return new PaymentProcessResponse(false, "Invalid card number", null);
+            return new PaymentProcessResponse(false, "Invalid card number", null, null, null);
         }
 
         if (!cardValidationService.validateExpirationDate(request.getExpirationDate())) {
-            return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null);
+            return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, null);
         }
 
         Optional<Card> cardOpt = cardRepository.findByCardNumberAndCvvAndCardholderNameAndExpirationDateAndDeletedFalse(
@@ -142,27 +146,68 @@ public class PaymentService {
         );
         
         if (cardOpt.isEmpty()) {
-            return new PaymentProcessResponse(false, "Card not found or invalid card details", null);
+            return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, null);
         }
         
         Card card = cardOpt.get();
 
         Account account = card.getAccount();
+
+        String globalTransactionId = UUID.randomUUID().toString();
+        LocalDateTime acquirerTimestamp = LocalDateTime.now();
+        transaction.setGlobalTransactionId(globalTransactionId);
+        transaction.setAcquirerTimestamp(acquirerTimestamp);
+        transaction.setUsed(true);
+        
         if (account.getBalance() < transaction.getAmount()) {
-            return new PaymentProcessResponse(false, "Insufficient funds", null);
+            paymentTransactionRepository.save(transaction);
+
+            String redirectUrl = null;
+            try {
+                redirectUrl = pspClientService.sendPaymentStatus(
+                        transaction.getStan(),
+                        globalTransactionId,
+                        acquirerTimestamp,
+                        "FAILED"
+                );
+            } catch (Exception e) {
+                System.err.println("Failed to notify PSP about payment status: " + e.getMessage());
+            }
+            
+            return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
         }
 
-        //ovdje bi trebalo da se novac prebaci na racun prodavca
+        // SUCCESS slučaj - dovoljno sredstava
+        // Oduzimam sredstva sa kartice korisnika
         account.setBalance(account.getBalance() - transaction.getAmount());
         accountRepository.save(account);
-
-        transaction.setUsed(true);
+        
+        // Prebacujem sredstva na merchant account
+        Optional<Account> merchantAccountOpt = accountRepository.findByMerchantId(transaction.getMerchantId());
+        if (merchantAccountOpt.isPresent()) {
+            Account merchantAccount = merchantAccountOpt.get();
+            merchantAccount.setBalance(merchantAccount.getBalance() + transaction.getAmount());
+            accountRepository.save(merchantAccount);
+        } else {
+            System.err.println("Warning: Merchant account not found for merchantId: " + transaction.getMerchantId() + ". Payment processed but funds not transferred to merchant.");
+        }
+        
         paymentTransactionRepository.save(transaction);
         
-        // ovo vidit treba li ovje jesam obro skonto
-        String globalTransactionId = UUID.randomUUID().toString();
+        // slanje statusa Pspu i dobijanje redirectUrl-a
+        String redirectUrl = null;
+        try {
+            redirectUrl = pspClientService.sendPaymentStatus(
+                    transaction.getStan(),
+                    globalTransactionId,
+                    acquirerTimestamp,
+                    "SUCCESS"
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to notify PSP about payment status: " + e.getMessage());
+        }
         
-        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId);
+        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
     }
 }
 

@@ -15,4 +15,16 @@ import org.springframework.context.annotation.PropertySource;
 public class ConfigProperties {
     @Value("${frontend.api.url}")
     private String frontendBaseUrl;
+
+    @Value("${psp.api.url}")
+    private String pspBaseUrl;
+
+    @Value("${server.ssl.key-store}")
+    private String keyStore;
+
+    @Value("${server.ssl.key-store-type}")
+    private String keyStoreType;
+
+    @Value("${server.ssl.key-store-password}")
+    private String keyStorePassword;
 }

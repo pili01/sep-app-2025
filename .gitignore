@@ -27,6 +27,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Secrets - Osetljivi podaci koji se NE smeju commit-ovati
 WebShop/WebShopSEP/src/main/resources/secrets.properties
-
+PaymentServiceProvider/PaymentServiceProviderSEP/src/main/resources/secrets.properties
 Bank/Bank/src/main/resources/secrets.properties

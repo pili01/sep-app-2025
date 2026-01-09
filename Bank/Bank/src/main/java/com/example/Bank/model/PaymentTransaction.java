@@ -26,13 +26,22 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private String currency; // valutaa
 
-    @Column(nullable = false)
-    private String merchantName;
+    @Column(name = "merchant_id", nullable = false)
+    private String merchantId;
 
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
     @Column(nullable = false)
     private Boolean used = false; // da li je forma koristena jer ima jedan pokusaj
+
+    @Column
+    private String stan; // stan od pspa
+
+    @Column
+    private String globalTransactionId;
+
+    @Column
+    private LocalDateTime acquirerTimestamp; // timestamp kada je bbanka obradila transakciju
 }
 
