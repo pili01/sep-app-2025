@@ -35,7 +35,7 @@ public class Merchant {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "Merchant status is required")
-    private MerchantStatus status = MerchantStatus.DRAFT;
+    private MerchantStatus status = MerchantStatus.ACTIVE;
 
     @Column(nullable = false)
     @NotBlank(message = "Success URL is required")
