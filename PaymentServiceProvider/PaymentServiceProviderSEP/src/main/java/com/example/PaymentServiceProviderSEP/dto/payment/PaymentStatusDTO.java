@@ -19,7 +19,7 @@ public class PaymentStatusDTO {
     private String acquirerTimestamp; // ISO format string
 
     @NotBlank(message = "Status is required")
-    private String status; // "SUCCESS" or "FAILED"
+    private String status; // "SUCCESS", "FAILED", or "ERROR"
 }
 
 

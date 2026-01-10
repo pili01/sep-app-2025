@@ -122,20 +122,24 @@ public class PaymentService {
             .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (LocalDateTime.now().isAfter(transaction.getExpiresAt())) {
-            return new PaymentProcessResponse(false, "Payment session has expired", null, null, null);
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Payment session has expired", null, null, redirectUrl);
         }
 
         if (transaction.getUsed()) {
-            return new PaymentProcessResponse(false, "Payment has already been processed", null, null, null);
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Payment has already been processed", null, null, redirectUrl);
         }
 
         String panDigits = request.getPan().replaceAll("\\D", "");
         if (!cardValidationService.validateLuhn(panDigits)) {
-            return new PaymentProcessResponse(false, "Invalid card number", null, null, null);
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Invalid card number", null, null, redirectUrl);
         }
 
         if (!cardValidationService.validateExpirationDate(request.getExpirationDate())) {
-            return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, null);
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, redirectUrl);
         }
 
         Optional<Card> cardOpt = cardRepository.findByCardNumberAndCvvAndCardholderNameAndExpirationDateAndDeletedFalse(
@@ -146,7 +150,8 @@ public class PaymentService {
         );
         
         if (cardOpt.isEmpty()) {
-            return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, null);
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, redirectUrl);
         }
         
         Card card = cardOpt.get();
@@ -162,17 +167,12 @@ public class PaymentService {
         if (account.getBalance() < transaction.getAmount()) {
             paymentTransactionRepository.save(transaction);
 
-            String redirectUrl = null;
-            try {
-                redirectUrl = pspClientService.sendPaymentStatus(
-                        transaction.getStan(),
-                        globalTransactionId,
-                        acquirerTimestamp,
-                        "FAILED"
-                );
-            } catch (Exception e) {
-                System.err.println("Failed to notify PSP about payment status: " + e.getMessage());
-            }
+            String redirectUrl = pspClientService.sendPaymentStatus(
+                    transaction.getStan(),
+                    globalTransactionId,
+                    acquirerTimestamp,
+                    "FAILED"
+            ).orElse(null);
             
             return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
         }
@@ -188,26 +188,39 @@ public class PaymentService {
             Account merchantAccount = merchantAccountOpt.get();
             merchantAccount.setBalance(merchantAccount.getBalance() + transaction.getAmount());
             accountRepository.save(merchantAccount);
-        } else {
-            System.err.println("Warning: Merchant account not found for merchantId: " + transaction.getMerchantId() + ". Payment processed but funds not transferred to merchant.");
         }
         
         paymentTransactionRepository.save(transaction);
         
         // slanje statusa Pspu i dobijanje redirectUrl-a
-        String redirectUrl = null;
-        try {
-            redirectUrl = pspClientService.sendPaymentStatus(
+        String redirectUrl = pspClientService.sendPaymentStatus(
+                transaction.getStan(),
+                globalTransactionId,
+                acquirerTimestamp,
+                "SUCCESS"
+        ).orElse(null);
+        
+        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+    }
+
+
+    private String getErrorRedirectUrl(PaymentTransaction transaction) {
+        if (transaction.getStan() != null) {
+            String globalTransactionId = UUID.randomUUID().toString();
+            LocalDateTime acquirerTimestamp = LocalDateTime.now();
+            
+            Optional<String> redirectUrlOpt = pspClientService.sendPaymentStatus(
                     transaction.getStan(),
                     globalTransactionId,
                     acquirerTimestamp,
-                    "SUCCESS"
+                    "ERROR"
             );
-        } catch (Exception e) {
-            System.err.println("Failed to notify PSP about payment status: " + e.getMessage());
+            
+            return redirectUrlOpt.orElse(null);
         }
         
-        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+        // Ako nema STAN-a, ne može da kontaktira PSP
+        return null;
     }
 }
 

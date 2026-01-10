@@ -57,6 +57,11 @@ public class PaymentService {
                     transaction.setStatus(TransactionStatus.FAILED);
                     statusChanged = true;
                 }
+            } else if ("ERROR".equalsIgnoreCase(pspStatus)) {
+                if (transaction.getStatus() != TransactionStatus.ERROR) {
+                    transaction.setStatus(TransactionStatus.ERROR);
+                    statusChanged = true;
+                }
             }
 
             // Sačuvaj transakciju ako je status promenjen ili paymentMethod ažuriran

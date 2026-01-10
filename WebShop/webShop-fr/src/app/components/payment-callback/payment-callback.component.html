@@ -43,6 +43,29 @@
             }
             <button class="btn-primary" (click)="goToRentals()">Nazad na iznajmljivanja</button>
           </div>
+        } @else if (paymentStatus() === 'ERROR') {
+          <div class="error-state">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h2>Došlo je do greške</h2>
+            <p>Nažalost, došlo je do greške prilikom obrade vaše transakcije.</p>
+            <p class="help-text">Mogući razlozi:</p>
+            <ul class="reasons-list">
+              <li>Sesija plaćanja je istekla</li>
+              <li>Nevažeći podaci kartice (broj kartice, CVV, datum isteka)</li>
+              <li>Kartica nije pronađena u sistemu</li>
+              <li>Greška u komunikaciji između servisa</li>
+            </ul>
+            <p class="help-text">Molimo kontaktirajte podršku ili pokušajte ponovo kasnije.</p>
+            @if (transactionId()) {
+              <p class="transaction-id">Transaction ID: <strong>{{ transactionId() }}</strong></p>
+            }
+            <p class="status-info">Status: <strong>{{ paymentStatus() }}</strong></p>
+            <button class="btn-primary" (click)="goToRentals()">Nazad na iznajmljivanja</button>
+          </div>
         } @else if (paymentStatus() === 'CANCELLED' || paymentStatus() === 'PENDING') {
           <div class="error-state">
             <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
