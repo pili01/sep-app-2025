@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SoftDelete;
@@ -40,6 +41,8 @@ public class Account {
     @Column(nullable = false)
     private String currency = "EUR";
 
+    @JsonIgnore
+    @ToString.Exclude
     @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.LAZY)
     private User user;
 
