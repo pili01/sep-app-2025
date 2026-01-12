@@ -26,6 +26,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/bank/payment/test/**").permitAll() // Test endpoint-i su javni
                         .requestMatchers("/api/bank/payment/**").permitAll() // Payment forma je javna
+                        .requestMatchers("/api/bank/qr/**").permitAll()
                         .requestMatchers("/api/bank/accounts/**").permitAll()
                         .anyRequest().authenticated()
                 )

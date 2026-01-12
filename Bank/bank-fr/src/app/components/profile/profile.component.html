@@ -1,0 +1,35 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <h1>Moj Profil</h1>
+    </div>
+
+    @if (user) {
+      <div class="profile-info">
+        <div class="info-item">
+          <label>Email</label>
+          <p>{{ user.email }}</p>
+        </div>
+        <div class="info-item">
+          <label>Korisnički ID</label>
+          <p>{{ user.userId }}</p>
+        </div>
+        <div class="info-item">
+          <label>Uloga</label>
+          <p class="role-badge">{{ user.userRole }}</p>
+        </div>
+      </div>
+    } @else {
+      <div class="error-message">
+        <p>Niste prijavljeni. Molimo prijavite se.</p>
+      </div>
+    }
+  </div>
+</div>
+

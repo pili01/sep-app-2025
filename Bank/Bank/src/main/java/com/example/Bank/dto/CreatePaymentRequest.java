@@ -26,4 +26,6 @@ public class CreatePaymentRequest {
 
     @NotBlank(message = "pspTimestamp is required")
     private String pspTimestamp;
+
+    private String description = "Payment for car rental";
 }

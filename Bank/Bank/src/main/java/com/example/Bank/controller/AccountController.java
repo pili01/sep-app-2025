@@ -3,6 +3,9 @@ package com.example.Bank.controller;
 import com.example.Bank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,6 +23,17 @@ public class AccountController {
         try {
             String merchantId = accountService.getMerchantIdFromAccountNumber(accountNumber.get("accountNumber"));
             return ResponseEntity.ok(Map.of("merchantId", merchantId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyAccount() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String email = auth != null ? auth.getName() : "unknown";
+            return ResponseEntity.ok(accountService.getMyAccountData(email));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }

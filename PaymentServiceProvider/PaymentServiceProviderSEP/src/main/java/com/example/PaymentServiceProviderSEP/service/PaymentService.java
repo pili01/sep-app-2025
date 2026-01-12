@@ -22,12 +22,9 @@ import java.util.UUID;
 public class PaymentService {
 
     private final MerchantRepository merchantRepository;
-    private final MerchantPaymentMethodSubscriptionRepository subscriptionRepository;
     private final CryptoService cryptoService;
-    private final BankClientService bankClientService;
     private final ConfigProperties configProperties;
     private final TransactionService transactionService;
-    private final MerchantPaymentMethodSubscriptionService merchantPaymentMethodSubscriptionService;
     private final TransactionRepository transactionRepository;
 
     @Transactional
@@ -56,45 +53,6 @@ public class PaymentService {
                 "redirectionUrl", redirectionUrl,
                 "message", "Payment initialized successfully"
         );
-    }
-
-    @Transactional
-    public PaymentInitResponseDTO requestPaymentParametersFromBank(Map<String, String> requestMap) {
-        Transaction transaction = transactionService.getTransactionById(Long.parseLong(requestMap.get("transactionId")));
-        if (transaction == null) {
-            throw new RuntimeException("Invalid transaction ID");
-        }
-        Merchant merchant = merchantRepository.findByMerchantId(transaction.getMerchantId())
-                .orElseThrow(() -> new RuntimeException("Invalid merchant credentials"));
-
-        if (merchant.getStatus() != MerchantStatus.ACTIVE) {
-            throw new RuntimeException("Merchant is not active");
-        }
-        if (merchantPaymentMethodSubscriptionService.getActiveSubscriptionsByMerchantId(merchant.getId()).stream().noneMatch(as -> as.getPaymentMethodCode().toString().equals(requestMap.get("paymentMethodCode")) && as.getEnabled() != null && as.getEnabled())) {
-            throw new RuntimeException("Merchant does not have active " + requestMap.get("paymentMethodCode") + " subscription");
-        }
-        transaction.setPaymentMethod(PaymentMethodCode.valueOf(requestMap.get("paymentMethodCode")));
-        transaction.setStatus(TransactionStatus.PENDING);
-        transactionService.createTransaction(transaction);
-
-        // Create payment transaction in Bank
-        try {
-            Map<String, Object> bankResponse = bankClientService.createPaymentTransaction(
-                    transaction.getMerchantIdFromBank(),
-                    transaction.getAmount(),
-                    transaction.getCurrency(),
-                    transaction.getSTAN(),
-                    transaction.getPspTimestamp()
-            );
-
-            return new PaymentInitResponseDTO(
-                    bankResponse.get("paymentUrl").toString(),
-                    bankResponse.get("paymentId").toString(),
-                    "Payment initiated successfully"
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize payment: " + e.getMessage(), e);
-        }
     }
 
     @Transactional
@@ -146,7 +104,7 @@ public class PaymentService {
         // Koristim query parametar za transactionId
         String separator = baseUrl.contains("?") ? "&" : "?";
         String redirectUrl = baseUrl + separator + "transactionId=" + transaction.getTransactionId();
-        
+
         return redirectUrl;
     }
 

@@ -14,7 +14,6 @@ import org.springframework.web.client.RestClient;
 import java.security.KeyStore;
 import java.sql.Timestamp;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class BankClientService {
@@ -77,6 +76,30 @@ public class BankClientService {
             throw new RuntimeException("Invalid response from Bank when creating payment transaction");
         } catch (Exception e) {
             throw new RuntimeException("Failed to create payment transaction in Bank: " + e.getMessage(), e);
+        }
+    }
+
+    public Map<String, Object> generateQrPaymentTransaction(String merchantId, Double amount, String currency, String STAN, Timestamp pspTimestamp) {
+        Map<String, Object> requestBody = Map.of(
+                "merchantId", merchantId,
+                "amount", amount,
+                "currency", currency,
+                "STAN", STAN,
+                "pspTimestamp", pspTimestamp.toString()
+        );
+        try {
+            Map<String, Object> response = restClient.post()
+                    .uri("/api/bank/qr/create")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+            if (response != null && response.containsKey("paymentId") && response.containsKey("paymentUrl")) {
+                return response;
+            }
+
+            throw new RuntimeException("Invalid response from Bank when create payment transaction");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create qr code payment in Bank");
         }
     }
 

@@ -27,4 +27,7 @@ public class ConfigProperties {
 
     @Value("${server.ssl.key-store-password}")
     private String keyStorePassword;
+
+    @Value("${master-key}")
+    private String masterKey;
 }
