@@ -86,15 +86,9 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
     this.paymentService.getPaymentDetails(this.paymentId).subscribe({
       next: (details) => {
         this.isLoading = false;
-        console.log('Payment details received:', details);
-        console.log('Amount:', details.amount);
-        console.log('Expired:', details.expired);
-        console.log('Used:', details.used);
         this.paymentDetails = details;
-        console.log('paymentDetails set to:', this.paymentDetails);
         
         if (details.expired || details.used) {
-          console.log('Payment expired or used, disabling form');
           this.paymentForm.disable();
           if (details.expired) {
             this.paymentResult = { success: false, message: 'Payment session has expired' };
@@ -104,7 +98,6 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
           return;
         }
         
-        console.log('Payment is valid, starting timer');
         this.startTimer(details.expiresAt);
         this.cdr.detectChanges();
         this.cdr.detectChanges();
@@ -189,6 +182,7 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
     this.paymentService.processPayment(this.paymentId, request).subscribe({
       next: (response) => {
         this.isProcessing = false;
+        
         this.paymentResult = {
           success: response.success,
           message: response.message
@@ -205,6 +199,7 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isProcessing = false;
+        
         this.paymentResult = {
           success: false,
           message: err.error?.message || 'Payment processing failed'

@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import java.security.KeyStore;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PSPClientService {
@@ -53,7 +54,7 @@ public class PSPClientService {
         }
     }
 
-    public String sendPaymentStatus(String stan, String globalTransactionId, LocalDateTime acquirerTimestamp, String status) {
+    public Optional<String> sendPaymentStatus(String stan, String globalTransactionId, LocalDateTime acquirerTimestamp, String status) {
         Map<String, Object> requestBody = Map.of(
                 "stan", stan,
                 "globalTransactionId", globalTransactionId,
@@ -69,17 +70,17 @@ public class PSPClientService {
                     .body(Map.class);
 
             if (response == null || !response.containsKey("success")) {
-                throw new RuntimeException("Invalid response from PSP when sending payment status");
+                return Optional.empty();
             }
 
             if (response.containsKey("redirectUrl")) {
-                return (String) response.get("redirectUrl");
+                return Optional.of((String) response.get("redirectUrl"));
             } else {
-                throw new RuntimeException("PSP response does not contain redirectUrl");
+                return Optional.empty();
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send payment status to PSP: " + e.getMessage(), e);
+            return Optional.empty();
         }
     }
 }

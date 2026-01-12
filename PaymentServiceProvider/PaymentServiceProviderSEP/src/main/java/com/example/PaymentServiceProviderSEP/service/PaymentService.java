@@ -119,6 +119,8 @@ public class PaymentService {
             transaction.setStatus(TransactionStatus.COMPLETED);
         } else if ("FAILED".equalsIgnoreCase(statusDTO.getStatus())) {
             transaction.setStatus(TransactionStatus.FAILED);
+        } else if ("ERROR".equalsIgnoreCase(statusDTO.getStatus())) {
+            transaction.setStatus(TransactionStatus.ERROR); // ERROR je poseban status
         } else {
             throw new RuntimeException("Invalid status: " + statusDTO.getStatus());
         }
@@ -133,8 +135,10 @@ public class PaymentService {
             baseUrl = merchant.getSuccessUrl();
         } else if ("FAILED".equalsIgnoreCase(statusDTO.getStatus())) {
             baseUrl = merchant.getFailedUrl();
-        } else {
+        } else if ("ERROR".equalsIgnoreCase(statusDTO.getStatus())) {
             baseUrl = merchant.getErrorUrl();
+        } else {
+            baseUrl = merchant.getErrorUrl(); // Fallback na errorUrl za nepoznate statuse
         }
 
         // Konstruišem redirectUrl kao baseUrl + transactionId (merchantOrderId)

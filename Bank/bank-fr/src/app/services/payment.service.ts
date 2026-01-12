@@ -22,7 +22,3 @@ export class PaymentService {
 }
 
 
-
-
-
-
