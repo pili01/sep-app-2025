@@ -6,18 +6,49 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import jsQR from 'jsqr';
 import { AccountService } from '../../services/account.service';
+import { PaymentService } from '../../services/payment.service';
 
-interface QrData {
-  paymentCode?: string; // K
-  version?: string; // V
-  characterSet?: string; // C
-  accountNumber?: string; // R
-  recipientName?: string; // N
-  amount?: string; // I
-  paymentPurposeCode?: string; // SF
-  paymentPurpose?: string; // S
-  referenceNumber?: string; // RO
+// RAW QR format (ono što dolazi iz QR-a)
+export interface QrRawData {
+  K?: string;   // paymentCode
+  V?: string;   // version
+  C?: string;   // characterSet
+  R?: string;   // accountNumber
+  N?: string;   // recipientName
+  I?: string;   // amount
+  SF?: string;  // paymentPurposeCode
+  S?: string;   // paymentPurpose
+  RO?: string;  // referenceNumber
 }
+
+// Tvoj postojeći “lep” format
+export interface QrData {
+  paymentCode?: string;
+  version?: string;
+  characterSet?: string;
+  accountNumber?: string;
+  recipientName?: string;
+  amount?: string;
+  paymentPurposeCode?: string;
+  paymentPurpose?: string;
+  referenceNumber?: string;
+}
+
+// Konverter RAW → QrData
+export function mapQrRawToQrData(raw: QrRawData): QrData {
+  return {
+    paymentCode: raw.K,
+    version: raw.V,
+    characterSet: raw.C,
+    accountNumber: raw.R,
+    recipientName: raw.N,
+    amount: raw.I,
+    paymentPurposeCode: raw.SF,
+    paymentPurpose: raw.S,
+    referenceNumber: raw.RO
+  };
+}
+
 
 @Component({
   selector: 'app-pay-with-qr',
@@ -47,7 +78,8 @@ export class PayWithQr implements OnInit {
     private http: HttpClient,
     private activatedRoute: ActivatedRoute,
     private authService: AuthService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private paymentService:PaymentService
   ) { }
 
   ngOnInit(): void {
@@ -210,19 +242,29 @@ export class PayWithQr implements OnInit {
       return;
     }
 
-    const paymentData = {
-      accountNumber: this.accountNumber(),
-      recipientName: this.recipientName(),
-      amount: parseFloat(this.amount()),
-      currency: this.currency(),
-      paymentPurpose: this.paymentPurpose(),
-      referenceNumber: this.referenceNumber()
-    };
+    const request: QrRawData = {
+    R: this.accountNumber(),
+    N: this.recipientName(),
+    I: this.amount(),
+    S: this.paymentPurpose(),
+    RO: this.referenceNumber()
+  };
+  console.log('QR request:', request);
 
-    console.log('Payment data:', paymentData);
-
-    // TODO: Implementirati slanje na backend
-    // this.http.post('...', paymentData).subscribe(...);
+    this.paymentService.processPaymentQR(request).subscribe({
+    next: (response) => {
+      console.log('Payment success:', response);
+      alert('Plaćanje uspešno!');
+      if(response.redirectUrl){
+        window.location.href=response.redirectUrl
+      }
+      this.resetForm();
+    },
+    error: (err) => {
+      console.error('Payment failed:', err);
+      this.error.set('Greška prilikom obrade plaćanja.');
+    }
+  });
   }
 
   resetForm(): void {

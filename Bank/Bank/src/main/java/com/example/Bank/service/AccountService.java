@@ -36,4 +36,11 @@ public class AccountService {
                 "accountHolderName", account.getAccountHolderName()
         );
     }
+
+    public Account getMyAccount(String email) {
+        Account account = accountRepository
+                .findByUserEmailAndDeletedFalse(email)
+                .orElseThrow(() -> new RuntimeException("Account not found for user email: " + email));
+        return account;
+    }
 }

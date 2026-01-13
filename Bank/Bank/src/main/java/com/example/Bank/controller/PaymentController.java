@@ -1,15 +1,14 @@
 package com.example.Bank.controller;
 
 import com.example.Bank.config.ConfigProperties;
-import com.example.Bank.dto.CreatePaymentRequest;
-import com.example.Bank.dto.PaymentDetailsResponse;
-import com.example.Bank.dto.PaymentProcessRequest;
-import com.example.Bank.dto.PaymentProcessResponse;
+import com.example.Bank.dto.*;
 import com.example.Bank.service.AccountService;
 import com.example.Bank.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -80,5 +79,25 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+
+    @PostMapping("/processQR")
+    public ResponseEntity<PaymentProcessResponse> processPayment(
+             @RequestBody QrCodeData request) {
+
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth != null ? auth.getName() : "unknown";
+
+        PaymentProcessResponse response = paymentService.processPaymentQR(request,email);
+
+        if (response.getSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
 }
 

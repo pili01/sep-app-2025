@@ -227,5 +227,69 @@ public class PaymentService {
         // Ako nema STAN-a, ne može da kontaktira PSP
         return null;
     }
+
+
+
+
+    public PaymentProcessResponse processPaymentQR(QrCodeData qrCodeData,String email) {
+        String ro = qrCodeData.getRO();
+        String transactionId = ro.substring(2);
+
+        PaymentTransaction transaction = paymentTransactionRepository
+                .findById(Long.valueOf(transactionId))
+                .orElseThrow(() -> new RuntimeException("TRANSID NOT FOUND"));
+
+
+        Account fromAccount=accountService.getMyAccount(email);
+        Account toAccount=accountRepository.findByAccountNumberAndDeletedFalse(qrCodeData.getR())
+                .orElseThrow(() -> new RuntimeException("SEMI ODZELEJ"));;
+
+        String globalTransactionId = UUID.randomUUID().toString();
+        LocalDateTime acquirerTimestamp = LocalDateTime.now();
+        transaction.setGlobalTransactionId(globalTransactionId);
+        transaction.setAcquirerTimestamp(acquirerTimestamp);
+        if(fromAccount==null || toAccount==null) {throw new RuntimeException("qofcwdvnwfv");}
+
+        if (fromAccount.getBalance() < transaction.getAmount()) {
+            paymentTransactionRepository.save(transaction);
+
+            String redirectUrl = pspClientService.sendPaymentStatus(
+                    transaction.getStan(),
+                    globalTransactionId,
+                    acquirerTimestamp,
+                    "FAILED"
+            ).orElse(null);
+
+            return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+        }
+
+        // SUCCESS slučaj - dovoljno sredstava
+        // Oduzimam sredstva sa kartice korisnika
+        fromAccount.setBalance(fromAccount.getBalance() - transaction.getAmount());
+        accountRepository.save(fromAccount);
+
+        toAccount.setBalance(toAccount.getBalance() + transaction.getAmount());
+        accountRepository.save(toAccount);
+
+        paymentTransactionRepository.save(transaction);
+
+        // slanje statusa Pspu i dobijanje redirectUrl-a
+        String redirectUrl = pspClientService.sendPaymentStatus(
+                transaction.getStan(),
+                globalTransactionId,
+                acquirerTimestamp,
+                "SUCCESS"
+        ).orElse(null);
+
+        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+    }
+
+
+
+
+
+
+
+
 }
 
