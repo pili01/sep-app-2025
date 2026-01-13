@@ -91,11 +91,8 @@ public class PaymentController {
 
         PaymentProcessResponse response = paymentService.processPaymentQR(request,email);
 
-        if (response.getSuccess()) {
             return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        
     }
 
 

@@ -101,7 +101,7 @@ export class PayWithQr implements OnInit {
 
               // Ako nema podataka iz QR koda, koristi podatke korisnika
               if (!this.accountNumber()) {
-                alert('Greška pri učitavanju podataka o računu korisnika.');
+                //alert('Greška pri učitavanju podataka o računu korisnika.');
               }
             }
           },
@@ -254,7 +254,6 @@ export class PayWithQr implements OnInit {
     this.paymentService.processPaymentQR(request).subscribe({
     next: (response) => {
       console.log('Payment success:', response);
-      alert('Plaćanje uspešno!');
       if(response.redirectUrl){
         window.location.href=response.redirectUrl
       }
