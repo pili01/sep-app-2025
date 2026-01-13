@@ -1,0 +1,141 @@
+<div class="pay-with-qr-container">
+  <h1 class="title">Plaćanje QR kodom</h1>
+
+  <div class="info-section">
+    <div class="info-box">
+      <h3>ℹ️ Kako funkcioniše?</h3>
+      <ul>
+        <li><strong>Automatsko učitavanje:</strong> Podaci o vašem računu se automatski popunjavaju pri otvaranju stranice</li>
+        <li><strong>QR kod:</strong> Skenujete QR kod iz računa ili iz mBank aplikacije</li>
+        <li><strong>Podaci primaoca:</strong> Broj računa i ime primaoca se preuzimaju iz QR koda</li>
+        <li><strong>Plaćanje:</strong> Potom potvrdite plaćanje klikom na dugme "Plati"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="upload-section">
+    <label for="qr-upload" class="upload-label">
+      <span class="upload-icon">📷</span>
+      <span>Dodajte sliku QR koda</span>
+      <input
+        id="qr-upload"
+        type="file"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        class="file-input"
+      />
+    </label>
+
+    <div class="preview" *ngIf="previewUrl()">
+      <img [src]="previewUrl()" alt="QR kod pregled" />
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="error()">
+    <p>{{ error() }}</p>
+  </div>
+
+  <!-- Podaci o računu korisnika koji plaća -->
+  <div class="payer-info" *ngIf="userAccountNumber()">
+    <h3>Platilac</h3>
+    <div class="payer-details">
+      <div class="payer-item">
+        <span class="payer-label">Vaš račun:</span>
+        <span class="payer-value">{{ userAccountNumber() }}</span>
+      </div>
+      <div class="payer-item" *ngIf="userName()">
+        <span class="payer-label">Vaše ime:</span>
+        <span class="payer-value">{{ userName() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <form class="payment-form" *ngIf="qrData().accountNumber" (ngSubmit)="onSubmit()">
+    <h2>Podaci za plaćanje</h2>
+
+    <div class="form-group">
+      <label for="accountNumber">Broj računa primaoca *</label>
+      <input
+        id="accountNumber"
+        type="text"
+        [(ngModel)]="accountNumber"
+        name="accountNumber"
+        required
+        readonly
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="recipientName">Ime primaoca *</label>
+      <input
+        id="recipientName"
+        type="text"
+        [(ngModel)]="recipientName"
+        name="recipientName"
+        required
+        readonly
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="amount">Iznos *</label>
+        <input
+          id="amount"
+          type="number"
+          step="0.01"
+          [(ngModel)]="amount"
+          name="amount"
+          required
+          readonly
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="currency">Valuta</label>
+        <input
+          id="currency"
+          type="text"
+          [(ngModel)]="currency"
+          name="currency"
+          readonly
+          class="form-control"
+        />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="paymentPurpose">Svrha plaćanja</label>
+      <input
+        id="paymentPurpose"
+        type="text"
+        [(ngModel)]="paymentPurpose"
+        name="paymentPurpose"
+        readonly
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="referenceNumber">Poziv na broj</label>
+      <input
+        id="referenceNumber"
+        type="text"
+        [(ngModel)]="referenceNumber"
+        name="referenceNumber"
+        readonly
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="resetForm()">
+        Poništi
+      </button>
+      <button type="submit" class="btn btn-primary">Plati</button>
+    </div>
+  </form>
+</div>

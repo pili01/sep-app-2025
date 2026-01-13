@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PaymentDetailsResponse, PaymentProcessRequest, PaymentProcessResponse } from '../models/payment.models';
+import { QrRawData } from '../components/pay-with-qr/pay-with-qr';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,12 @@ export class PaymentService {
   processPayment(paymentId: string, request: PaymentProcessRequest): Observable<PaymentProcessResponse> {
     return this.http.post<PaymentProcessResponse>(`${this.apiUrl}/${paymentId}/process`, request);
   }
+
+
+ processPaymentQR(request:QrRawData): Observable<PaymentProcessResponse> {
+    return this.http.post<PaymentProcessResponse>(`${this.apiUrl}/processQR`, request);
+  }
+
 }
 
 

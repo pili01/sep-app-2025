@@ -5,8 +5,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SoftDelete;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +24,9 @@ public class Account {
     private Long id;
 
     @Column(nullable = false)
+    private String accountHolderName;  // e.g., user first and last name
+
+    @Column(nullable = false)
     private String merchantId;
 
     @Column(nullable = false)
@@ -35,6 +40,11 @@ public class Account {
 
     @Column(nullable = false)
     private String currency = "EUR";
+
+    @JsonIgnore
+    @ToString.Exclude
+    @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.LAZY)
+    private User user;
 
     @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore

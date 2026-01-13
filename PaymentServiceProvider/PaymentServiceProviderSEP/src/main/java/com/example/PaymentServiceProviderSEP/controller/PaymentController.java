@@ -4,6 +4,8 @@ import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
 import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
+import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
+import com.example.PaymentServiceProviderSEP.service.BankService;
 import com.example.PaymentServiceProviderSEP.service.MerchantPaymentMethodSubscriptionService;
 import com.example.PaymentServiceProviderSEP.service.MerchantService;
 import com.example.PaymentServiceProviderSEP.service.PaymentService;
@@ -22,6 +24,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final BankService bankService;
     private final MerchantPaymentMethodSubscriptionService merchantPaymentMethodSubscriptionService;
 
     @PostMapping("/init")
@@ -48,7 +51,20 @@ public class PaymentController {
     @PostMapping("/initiate")
     public ResponseEntity<?> initiatePayment(@RequestBody Map<String, String> request) {
         try {
-            PaymentInitResponseDTO paymentInitResponseDTO = paymentService.requestPaymentParametersFromBank(request);
+            PaymentMethodCode paymentMethodCode = PaymentMethodCode.valueOf(request.get("paymentMethodCode"));
+            PaymentInitResponseDTO paymentInitResponseDTO = null;
+            switch (paymentMethodCode) {
+                case BANK_CARD, BANK_QR -> {
+                    paymentInitResponseDTO = bankService.requestPaymentParametersFromBank(request, paymentMethodCode);
+                }
+                case PAYPAL -> {
+                    request.put("paymentMethodCode", "PAYPAL");
+                }
+                case CRYPTO_BTC -> {
+                    request.put("paymentMethodCode", "CRYPTO_BTC");
+                }
+                default -> throw new IllegalArgumentException("Unsupported payment method code");
+            }
             return ResponseEntity.ok(paymentInitResponseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

@@ -28,4 +28,7 @@ public class ConfigProperties {
 
     @Value("${server.ssl.key-store-password}")
     private String keyStorePassword;
+
+    @Value("${exchange.rate.api.url}")
+    private String exchangeRateApiUrl;
 }

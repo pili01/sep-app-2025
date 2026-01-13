@@ -3,6 +3,7 @@ package com.example.Bank.service;
 import com.example.Bank.dto.PaymentDetailsResponse;
 import com.example.Bank.dto.PaymentProcessRequest;
 import com.example.Bank.dto.PaymentProcessResponse;
+import com.example.Bank.dto.QrCodeData;
 import com.example.Bank.model.Account;
 import com.example.Bank.model.Card;
 import com.example.Bank.model.PaymentTransaction;
@@ -10,6 +11,7 @@ import com.example.Bank.repository.AccountRepository;
 import com.example.Bank.repository.CardRepository;
 import com.example.Bank.repository.PaymentTransactionRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,26 +22,15 @@ import java.util.UUID;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PaymentService {
-    
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final CardValidationService cardValidationService;
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
+    private final AccountService accountService;
     private final PSPClientService pspClientService;
-    
-    public PaymentService(
-            PaymentTransactionRepository paymentTransactionRepository,
-            CardValidationService cardValidationService,
-            CardRepository cardRepository,
-            AccountRepository accountRepository,
-            PSPClientService pspClientService) {
-        this.paymentTransactionRepository = paymentTransactionRepository;
-        this.cardValidationService = cardValidationService;
-        this.cardRepository = cardRepository;
-        this.accountRepository = accountRepository;
-        this.pspClientService = pspClientService;
-    }
+    private final QrCodeService qrCodeService;
 
     //test transakcije
     public PaymentTransaction createTestTransaction() {
@@ -50,10 +41,10 @@ public class PaymentService {
         transaction.setMerchantId("TEST_MERCHANT");
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
-        
+
         return paymentTransactionRepository.save(transaction);
     }
-    
+
     public PaymentTransaction createPaymentTransaction(Double amount, String currency, String merchantId, String stan) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setPaymentId(UUID.randomUUID().toString());
@@ -63,10 +54,24 @@ public class PaymentService {
         transaction.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         transaction.setUsed(false);
         transaction.setStan(stan); // Čuva STAN koji je poslao PSP
-        
+
         return paymentTransactionRepository.save(transaction);
     }
-    
+
+    public byte[] generateQrCodeForPaymentTransaction(String paymentId) throws Exception {
+        PaymentTransaction transaction = paymentTransactionRepository.findByPaymentId(paymentId).get();
+
+        QrCodeData qrCodeData = new QrCodeData();
+        Account merchantAccount = accountService.getAccountByMerchantId(transaction.getMerchantId());
+        qrCodeData.setR(merchantAccount.getAccountNumber());
+        qrCodeData.setN(merchantAccount.getAccountHolderName());
+        qrCodeData.setI(transaction.getAmount()); //zaokruzujem na 2 decimale
+        qrCodeData.setS("Payment for rental in web shop");
+        qrCodeData.setRO("00" + transaction.getId());
+
+        return qrCodeService.generateQrCodeForTransaction(qrCodeData, 420);
+    }
+
     //isto test akaunt i kard
     public String createTestAccountAndCard() {
         Account account = new Account();
@@ -85,41 +90,41 @@ public class PaymentService {
         card.setDeleted(false);
         card.setAccount(account);
         cardRepository.save(card);
-        
+
         return "Test Account and Card created!\n" +
-               "Card Number: 4111111111111111\n" +
-               "Cardholder Name: Test User\n" +
-               "Expiration Date: 12/25\n" +
-               "CVV: 123\n" +
-               "Account Balance: 1000.0 EUR";
+                "Card Number: 4111111111111111\n" +
+                "Cardholder Name: Test User\n" +
+                "Expiration Date: 12/25\n" +
+                "CVV: 123\n" +
+                "Account Balance: 1000.0 EUR";
     }
 
     public PaymentDetailsResponse getPaymentDetails(String paymentId) {
         PaymentTransaction transaction = paymentTransactionRepository
-            .findByPaymentId(paymentId)
-            .orElseThrow(() -> new RuntimeException("Payment not found"));
-        
+                .findByPaymentId(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
         LocalDateTime now = LocalDateTime.now();
         boolean expired = now.isAfter(transaction.getExpiresAt());
 
         List<String> acceptedCardTypes = Arrays.asList("VISA", "MASTERCARD");
-        
+
         return new PaymentDetailsResponse(
-            transaction.getAmount(),
-            transaction.getCurrency(),
-            transaction.getMerchantId(),
-            transaction.getExpiresAt(),
-            acceptedCardTypes,
-            expired,
-            transaction.getUsed()
+                transaction.getAmount(),
+                transaction.getCurrency(),
+                transaction.getMerchantId(),
+                transaction.getExpiresAt(),
+                acceptedCardTypes,
+                expired,
+                transaction.getUsed()
         );
     }
-    
+
 
     public PaymentProcessResponse processPayment(String paymentId, PaymentProcessRequest request) {
         PaymentTransaction transaction = paymentTransactionRepository
-            .findByPaymentId(paymentId)
-            .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .findByPaymentId(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (LocalDateTime.now().isAfter(transaction.getExpiresAt())) {
             String redirectUrl = getErrorRedirectUrl(transaction);
@@ -143,17 +148,17 @@ public class PaymentService {
         }
 
         Optional<Card> cardOpt = cardRepository.findByCardNumberAndCvvAndCardholderNameAndExpirationDateAndDeletedFalse(
-            panDigits,
-            request.getSecurityCode(),
-            request.getCardHolderName(),
-            request.getExpirationDate()
+                panDigits,
+                request.getSecurityCode(),
+                request.getCardHolderName(),
+                request.getExpirationDate()
         );
-        
+
         if (cardOpt.isEmpty()) {
             String redirectUrl = getErrorRedirectUrl(transaction);
             return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, redirectUrl);
         }
-        
+
         Card card = cardOpt.get();
 
         Account account = card.getAccount();
@@ -163,7 +168,7 @@ public class PaymentService {
         transaction.setGlobalTransactionId(globalTransactionId);
         transaction.setAcquirerTimestamp(acquirerTimestamp);
         transaction.setUsed(true);
-        
+
         if (account.getBalance() < transaction.getAmount()) {
             paymentTransactionRepository.save(transaction);
 
@@ -173,7 +178,7 @@ public class PaymentService {
                     acquirerTimestamp,
                     "FAILED"
             ).orElse(null);
-            
+
             return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
         }
 
@@ -181,7 +186,7 @@ public class PaymentService {
         // Oduzimam sredstva sa kartice korisnika
         account.setBalance(account.getBalance() - transaction.getAmount());
         accountRepository.save(account);
-        
+
         // Prebacujem sredstva na merchant account
         Optional<Account> merchantAccountOpt = accountRepository.findByMerchantId(transaction.getMerchantId());
         if (merchantAccountOpt.isPresent()) {
@@ -189,9 +194,9 @@ public class PaymentService {
             merchantAccount.setBalance(merchantAccount.getBalance() + transaction.getAmount());
             accountRepository.save(merchantAccount);
         }
-        
+
         paymentTransactionRepository.save(transaction);
-        
+
         // slanje statusa Pspu i dobijanje redirectUrl-a
         String redirectUrl = pspClientService.sendPaymentStatus(
                 transaction.getStan(),
@@ -199,7 +204,7 @@ public class PaymentService {
                 acquirerTimestamp,
                 "SUCCESS"
         ).orElse(null);
-        
+
         return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
     }
 
@@ -208,19 +213,83 @@ public class PaymentService {
         if (transaction.getStan() != null) {
             String globalTransactionId = UUID.randomUUID().toString();
             LocalDateTime acquirerTimestamp = LocalDateTime.now();
-            
+
             Optional<String> redirectUrlOpt = pspClientService.sendPaymentStatus(
                     transaction.getStan(),
                     globalTransactionId,
                     acquirerTimestamp,
                     "ERROR"
             );
-            
+
             return redirectUrlOpt.orElse(null);
         }
-        
+
         // Ako nema STAN-a, ne može da kontaktira PSP
         return null;
     }
+
+
+
+
+    public PaymentProcessResponse processPaymentQR(QrCodeData qrCodeData,String email) {
+        String ro = qrCodeData.getRO();
+        String transactionId = ro.substring(2);
+
+        PaymentTransaction transaction = paymentTransactionRepository
+                .findById(Long.valueOf(transactionId))
+                .orElseThrow(() -> new RuntimeException("TRANSID NOT FOUND"));
+
+
+        Account fromAccount=accountService.getMyAccount(email);
+        Account toAccount=accountRepository.findByAccountNumberAndDeletedFalse(qrCodeData.getR())
+                .orElseThrow(() -> new RuntimeException("SEMI ODZELEJ"));;
+
+        String globalTransactionId = UUID.randomUUID().toString();
+        LocalDateTime acquirerTimestamp = LocalDateTime.now();
+        transaction.setGlobalTransactionId(globalTransactionId);
+        transaction.setAcquirerTimestamp(acquirerTimestamp);
+        if(fromAccount==null || toAccount==null) {throw new RuntimeException("qofcwdvnwfv");}
+
+        if (fromAccount.getBalance() < transaction.getAmount()) {
+            paymentTransactionRepository.save(transaction);
+
+            String redirectUrl = pspClientService.sendPaymentStatus(
+                    transaction.getStan(),
+                    globalTransactionId,
+                    acquirerTimestamp,
+                    "FAILED"
+            ).orElse(null);
+
+            return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+        }
+
+        // SUCCESS slučaj - dovoljno sredstava
+        // Oduzimam sredstva sa kartice korisnika
+        fromAccount.setBalance(fromAccount.getBalance() - transaction.getAmount());
+        accountRepository.save(fromAccount);
+
+        toAccount.setBalance(toAccount.getBalance() + transaction.getAmount());
+        accountRepository.save(toAccount);
+
+        paymentTransactionRepository.save(transaction);
+
+        // slanje statusa Pspu i dobijanje redirectUrl-a
+        String redirectUrl = pspClientService.sendPaymentStatus(
+                transaction.getStan(),
+                globalTransactionId,
+                acquirerTimestamp,
+                "SUCCESS"
+        ).orElse(null);
+
+        return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
+    }
+
+
+
+
+
+
+
+
 }
 
