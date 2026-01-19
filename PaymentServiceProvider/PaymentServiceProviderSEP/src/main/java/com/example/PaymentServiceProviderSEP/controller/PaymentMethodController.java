@@ -26,16 +26,12 @@ public class PaymentMethodController {
     public ResponseEntity<Void> connect(
             @RequestBody PaymentMethodConnectRequest request) {
 
-        if (paymentMethodService.existsByName(request.getName())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
         paymentMethodService.connect(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @Scheduled(fixedRate = 15_000)
+    @Scheduled(fixedRate = 30_000)
     public void heartbeat() {
         paymentMethodService.heartbeatRoundRobin();
     }

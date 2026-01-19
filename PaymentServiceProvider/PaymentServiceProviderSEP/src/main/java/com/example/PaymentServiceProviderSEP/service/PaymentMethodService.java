@@ -62,15 +62,22 @@ public class PaymentMethodService {
         var client = restClientFactory.create(method.getHostname());
 
         try {
-            client.get()
+            var response = client.get()
                     .uri(method.getHealthEndpoint())
                     .retrieve()
                     .toBodilessEntity();
 
+            if (response != null) {
+                System.out.println("Heartbeat response for " + method.getName() +
+                        " (" + method.getHostname() + "): " +
+                        response.getStatusCode());
+            }
+
             method.setLastHeartbeat(LocalDateTime.now());
 
         } catch (Exception e) {
-
+            System.err.println("Failed heartbeat for " + method.getName() +
+                    " (" + method.getHostname() + "): " + e.getMessage());
         }
 
         method.setCheckIndex(method.getCheckIndex() + 1);
