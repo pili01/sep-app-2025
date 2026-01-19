@@ -29,11 +29,11 @@ public class PaymentMethodService {
                     PaymentMethod pm = new PaymentMethod();
                     pm.setName(request.getName());
                     pm.setCheckIndex(0L);
-                    pm.setActive(true);
                     return pm;
                 });
 
         paymentMethod.setLastHeartbeat(LocalDateTime.now());
+        paymentMethod.setActive(true);
 
         if (!request.getHostname().equals(paymentMethod.getHostname())) {
             paymentMethod.setHostname(request.getHostname());
@@ -74,8 +74,10 @@ public class PaymentMethodService {
             }
 
             method.setLastHeartbeat(LocalDateTime.now());
+            method.setActive(true);
 
         } catch (Exception e) {
+            method.setActive(false);
             System.err.println("Failed heartbeat for " + method.getName() +
                     " (" + method.getHostname() + "): " + e.getMessage());
         }
