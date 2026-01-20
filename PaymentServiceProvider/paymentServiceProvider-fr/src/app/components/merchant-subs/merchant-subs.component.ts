@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MerchantService } from '../../service/merchants.service';
+import { Subscription } from '../../models/payment_method.model';
 
 @Component({
   selector: 'app-merchant-subs',
@@ -13,7 +14,7 @@ export class MerchantSubs implements OnInit {
   @Input({ required: true }) merchantId!: number;
   @Output() onAddNew = new EventEmitter<void>();
   
-  subscriptions = signal<any[]>([]);
+  subscriptions = signal<Subscription[]>([]);
   isLoading = signal(false);
 
   constructor(private merchantService: MerchantService) {}
@@ -24,6 +25,7 @@ export class MerchantSubs implements OnInit {
 
   loadSubscriptions() {
     this.isLoading.set(true);
+
     this.merchantService.getSubscriptions(this.merchantId).subscribe({
       next: (data) => {
         this.subscriptions.set(data);
@@ -31,7 +33,7 @@ export class MerchantSubs implements OnInit {
       },
       error: () => this.isLoading.set(false)
     });
-  }
+}
 
   toggleStatus(sub: any) {
     const newStatus = !sub.enabled;

@@ -1,11 +1,14 @@
 package com.example.PaymentServiceProviderSEP.service;
 
 import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionRequestDTO;
+import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
 import com.example.PaymentServiceProviderSEP.model.Merchant;
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
+import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import com.example.PaymentServiceProviderSEP.repository.MerchantPaymentMethodSubscriptionRepository;
 import com.example.PaymentServiceProviderSEP.repository.MerchantRepository;
+import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +23,19 @@ public class MerchantPaymentMethodSubscriptionService {
     private final MerchantPaymentMethodSubscriptionRepository subscriptionRepository;
     private final MerchantRepository merchantRepository;
     private final BankClientService bankClientService;
+    private final PaymentMethodRepository paymentMethodRepository;
 
-    public List<MerchantPaymentMethodSubscription> getSubscriptionsByMerchantId(Long merchantId) {
-        return subscriptionRepository.findByMerchantId(merchantId);
+    @Transactional
+    public List<SubscriptionResponseDTO> getSubscriptionsByMerchantId(Long merchantId) {
+        return subscriptionRepository.findByMerchantId(merchantId).stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
+    @Transactional
+    public MerchantPaymentMethodSubscription getSubscriptionById(Long id) {
+        return subscriptionRepository.findByIdWithPaymentMethod(id)
+                .orElseThrow(() -> new EntityNotFoundException("Subscription with id " + id + " not found"));
     }
 
     public List<MerchantPaymentMethodSubscription> getActiveSubscriptionsByMerchantId(Long merchantId) {
@@ -30,37 +43,46 @@ public class MerchantPaymentMethodSubscriptionService {
     }
 
     @Transactional
-    public MerchantPaymentMethodSubscription createSubscription(Long merchantId, SubscriptionRequestDTO subscriptionRequestDTO) {
+    public List<PaymentMethod> getAvailablePaymentMethodsForMerchant(Long merchantId) {
+        return paymentMethodRepository.findAvailableForMerchant(merchantId);
+    }
+
+    @Transactional
+    public SubscriptionResponseDTO createSubscription(Long merchantId, SubscriptionRequestDTO subscriptionRequestDTO) {
         Merchant merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new EntityNotFoundException("Merchant with id " + merchantId + " not found"));
 
-        // Provera da li već postoji pretplata za ovaj način plaćanja
-        if (subscriptionRepository.existsByMerchantIdAndPaymentMethodCode(merchantId, subscriptionRequestDTO.getPaymentMethodCode())) {
-            throw new IllegalArgumentException("Subscription for payment method " + subscriptionRequestDTO.getPaymentMethodCode() + " already exists for this merchant");
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(subscriptionRequestDTO.getPaymentMethodId())
+                .orElseThrow(() -> new EntityNotFoundException("Payment method with id " + subscriptionRequestDTO.getPaymentMethodId() + " not found"));
+
+        // Provera da li već postoji pretplata za ovaj servis plaćanja
+        if (subscriptionRepository.existsByMerchantIdAndPaymentMethodId(merchantId, paymentMethod.getId())){
+            throw new IllegalArgumentException("Subscription for payment method: " + paymentMethod.getPaymentMethodCode() + "-" + paymentMethod.getName()  + " already exists for this merchant");
         }
 
-        if (subscriptionRequestDTO.getPaymentMethodCode() == PaymentMethodCode.BANK_CARD) {
+        if (paymentMethod.getPaymentMethodCode() == PaymentMethodCode.BANK_CARD) {
             String merchantIdFromBank = bankClientService.getMerchantIdFromBankForAccountNumber(subscriptionRequestDTO.getMerchantAccountNumber());
             merchant.setMerchantIdFromBank(merchantIdFromBank);
         }
 
         MerchantPaymentMethodSubscription subscription = new MerchantPaymentMethodSubscription();
         subscription.setMerchant(merchant);
-        subscription.setPaymentMethodCode(subscriptionRequestDTO.getPaymentMethodCode());
+        subscription.setPaymentMethod(paymentMethod);
         subscription.setEnabled(true);
         subscription.setConfigJson(subscriptionRequestDTO.getConfigJson());
 
-        return subscriptionRepository.save(subscription);
+        subscriptionRepository.save(subscription);
+
+        return convertToDto(subscription);
     }
 
     @Transactional
-    public MerchantPaymentMethodSubscription updateSubscription(Long subscriptionId, Boolean enabled, String configJson) {
+    public SubscriptionResponseDTO updateSubscription(Long subscriptionId, Boolean enabled, String configJson) {
         MerchantPaymentMethodSubscription subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription with id " + subscriptionId + " not found"));
 
         Long merchantId = subscription.getMerchant().getId();
 
-        // Validacija: Ne dozvoljava onemogućavanje ako je to poslednji aktivan način plaćanja
         if (enabled != null && !enabled && subscription.getEnabled()) {
             long activeCount = subscriptionRepository.countByMerchantIdAndEnabledTrue(merchantId);
             if (activeCount <= 1) {
@@ -75,7 +97,9 @@ public class MerchantPaymentMethodSubscriptionService {
             subscription.setConfigJson(configJson);
         }
 
-        return subscriptionRepository.save(subscription);
+        subscriptionRepository.save(subscription);
+
+        return convertToDto(subscription);
     }
 
     @Transactional
@@ -96,9 +120,18 @@ public class MerchantPaymentMethodSubscriptionService {
         subscriptionRepository.delete(subscription);
     }
 
-    public MerchantPaymentMethodSubscription getSubscriptionById(Long subscriptionId) {
-        return subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription with id " + subscriptionId + " not found"));
+    private SubscriptionResponseDTO convertToDto(MerchantPaymentMethodSubscription entity) {
+        return new SubscriptionResponseDTO(
+                entity.getId(),
+                entity.getMerchant().getId(),
+                entity.getPaymentMethod().getId(),
+                entity.getPaymentMethod().getName(),
+                entity.getPaymentMethod().getPaymentMethodCode(),
+                entity.getEnabled(),
+                entity.getPaymentMethod().isActive(),
+                entity.getConfigJson(),
+                entity.getCreatedAt()
+        );
     }
 }
 

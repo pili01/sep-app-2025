@@ -1,6 +1,7 @@
 package com.example.PaymentServiceProviderSEP.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,4 +45,9 @@ public class PaymentMethod {
 
     @Column(nullable = false)
     private Long checkIndex;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotNull(message = "Payment method code is required")
+    private PaymentMethodCode paymentMethodCode = PaymentMethodCode.OTHER;
 }

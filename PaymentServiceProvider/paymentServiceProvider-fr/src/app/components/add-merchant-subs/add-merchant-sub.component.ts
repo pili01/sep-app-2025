@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, signal, computed } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MerchantService } from '../../service/merchants.service';
+import { PaymentMethod } from '../../models/payment_method.model';
 
 @Component({
   selector: 'app-add-sub',
@@ -17,15 +18,9 @@ export class AddSub implements OnInit {
   @Output() onCancel = new EventEmitter<void>();
 
   isLoading = signal(true);
-  existingMethodCodes = signal<string[]>([]);
+  paymentMethods = signal<PaymentMethod[]>([]);
 
-  allPossibleCodes = signal<string[]>(['BANK_CARD', 'BANK_QR', 'PAYPAL', 'CRYPTO_BTC']);
-
-  availableCodes = computed(() => {
-    return this.allPossibleCodes().filter(code => !this.existingMethodCodes().includes(code));
-  });
-
-  newSub = { paymentMethodCode: '', merchantAccountNumber: '', configJson: '{}' };
+  selectedPaymentMethod = { id: 0, name: '', paymentMethodCode: '', active: null, merchantAccountNumber: '', configJson: '{}'};
 
   constructor(private merchantService: MerchantService) { }
 
@@ -34,28 +29,35 @@ export class AddSub implements OnInit {
   }
 
   loadCurrentState() {
-    this.isLoading.set(true);
-    this.merchantService.getSubscriptions(this.merchantId).subscribe({
-      next: (subs) => {
-        this.existingMethodCodes.set(subs.map(s => s.paymentMethodCode));
+  this.isLoading.set(true);
 
-        if (this.availableCodes().length > 0) {
-          this.newSub.paymentMethodCode = this.availableCodes()[0];
+  this.merchantService
+    .getAvailableSubscriptions(this.merchantId)
+    .subscribe({
+      next: (methods) => {
+        this.paymentMethods.set(methods);
+
+        if (methods.length > 0) {
+          this.selectedPaymentMethod = methods[0];
         }
+
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
     });
-  }
+}
 
   onSubmit() {
-    if (this.newSub.paymentMethodCode == 'BANK_CARD' && !this.newSub.merchantAccountNumber) {
+    if (this.selectedPaymentMethod.paymentMethodCode == 'BANK_CARD' && !this.selectedPaymentMethod.merchantAccountNumber) {
       alert("Merchant account number is required for BANK_CARD");
       return;
     }
-    this.merchantService.createSubscription(this.merchantId, this.newSub).subscribe({
+    this.merchantService.createSubscription(this.merchantId, this.selectedPaymentMethod).subscribe({
       next: () => this.onSaved.emit(),
       error: (err) => alert(err.error?.error || "Creation failed")
     });
   }
+
+  comparePaymentMethods = (a: PaymentMethod, b: PaymentMethod) =>
+  a && b ? a.id === b.id : a === b;
 }

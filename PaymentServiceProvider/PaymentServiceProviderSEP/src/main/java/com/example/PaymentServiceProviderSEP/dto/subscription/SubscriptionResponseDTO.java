@@ -13,8 +13,11 @@ import java.time.LocalDateTime;
 public class SubscriptionResponseDTO {
     private Long id;
     private Long merchantId;
+    private Long paymentMethodId;
+    private String paymentMethodName;
     private PaymentMethodCode paymentMethodCode;
     private Boolean enabled;
+    private Boolean active;
     private String configJson;
     private LocalDateTime createdAt;
 }

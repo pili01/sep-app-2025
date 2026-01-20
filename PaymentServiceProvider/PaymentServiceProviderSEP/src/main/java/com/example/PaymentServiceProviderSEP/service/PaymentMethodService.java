@@ -1,13 +1,16 @@
 package com.example.PaymentServiceProviderSEP.service;
 
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodConnectRequest;
+import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodDTO;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
+import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +50,26 @@ public class PaymentMethodService {
             paymentMethod.setPaymentEndpoint(request.getPaymentUrl());
         }
 
+        PaymentMethodCode resolvedCode =
+                resolvePaymentMethodCode(request.getPaymentMethodCode());
+
+        if (resolvedCode != paymentMethod.getPaymentMethodCode()) {
+            paymentMethod.setPaymentMethodCode(resolvedCode);
+        }
+
         paymentMethodRepository.save(paymentMethod);
+    }
+
+    private PaymentMethodCode resolvePaymentMethodCode(String rawCode) {
+        if (rawCode == null || rawCode.isBlank()) {
+            return PaymentMethodCode.OTHER;
+        }
+
+        try {
+            return PaymentMethodCode.valueOf(rawCode.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return PaymentMethodCode.OTHER;
+        }
     }
 
     @Transactional
@@ -84,5 +106,21 @@ public class PaymentMethodService {
 
         method.setCheckIndex(method.getCheckIndex() + 1);
         paymentMethodRepository.save(method);
+    }
+
+    @Transactional
+    public List<PaymentMethodDTO> getAll() {
+        return paymentMethodRepository.findAll()
+                .stream()
+                .map(pm -> new PaymentMethodDTO(
+                        pm.getId(),
+                        pm.getName(),
+                        pm.getPaymentMethodCode() != null
+                                ? pm.getPaymentMethodCode().name()
+                                : null,
+                        pm.isActive(),
+                        pm.getLastHeartbeat()
+                ))
+                .toList();
     }
 }

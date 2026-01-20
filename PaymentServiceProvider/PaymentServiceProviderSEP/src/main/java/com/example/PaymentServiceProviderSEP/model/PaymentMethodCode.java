@@ -4,6 +4,7 @@ public enum PaymentMethodCode {
     BANK_CARD,
     BANK_QR,
     PAYPAL,
-    CRYPTO_BTC
+    CRYPTO_BTC,
+    OTHER
 }
 

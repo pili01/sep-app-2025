@@ -24,8 +24,11 @@ public class BankService {
     private final ConfigProperties configProperties;
 
     @Transactional
-    public PaymentInitResponseDTO requestPaymentParametersFromBank(Map<String, String> requestMap, PaymentMethodCode paymentMethodCode) {
-        Transaction transaction = transactionService.getTransactionById(Long.parseLong(requestMap.get("transactionId")));
+    public PaymentInitResponseDTO requestPaymentParametersFromBank(MerchantPaymentMethodSubscription subscription, Long transactionId) {
+        Transaction transaction = transactionService.getTransactionById(transactionId);
+        PaymentMethod paymentMethod = subscription.getPaymentMethod();
+        PaymentMethodCode  paymentMethodCode = paymentMethod.getPaymentMethodCode();
+
         if (transaction == null) {
             throw new RuntimeException("Invalid transaction ID");
         }
@@ -35,10 +38,13 @@ public class BankService {
         if (merchant.getStatus() != MerchantStatus.ACTIVE) {
             throw new RuntimeException("Merchant is not active");
         }
-        if (merchantPaymentMethodSubscriptionService.getActiveSubscriptionsByMerchantId(merchant.getId()).stream().noneMatch(as -> as.getPaymentMethodCode().toString().equals(requestMap.get("paymentMethodCode")) && as.getEnabled() != null && as.getEnabled())) {
-            throw new RuntimeException("Merchant does not have active " + requestMap.get("paymentMethodCode") + " subscription");
+
+        if(merchant.getId() != subscription.getMerchant().getId() || !subscription.getPaymentMethod().isActive() ||
+         !subscription.getEnabled()){
+            throw new RuntimeException("Merchant does not have active " + subscription.getPaymentMethod().getPaymentMethodCode() + " subscription");
         }
-        transaction.setPaymentMethod(PaymentMethodCode.valueOf(requestMap.get("paymentMethodCode")));
+
+        transaction.setPaymentMethod(PaymentMethodCode.valueOf(paymentMethodCode.name()));
         transaction.setStatus(TransactionStatus.PENDING);
         transactionService.createTransaction(transaction);
 

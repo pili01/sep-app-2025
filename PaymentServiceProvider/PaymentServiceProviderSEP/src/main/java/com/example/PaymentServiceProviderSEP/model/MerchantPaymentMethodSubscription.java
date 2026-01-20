@@ -27,10 +27,10 @@ public class MerchantPaymentMethodSubscription {
     @NotNull(message = "Merchant is required")
     private Merchant merchant;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @NotNull(message = "Payment method code is required")
-    private PaymentMethodCode paymentMethodCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    @NotNull(message = "Payment method is required")
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false)
     @NotNull(message = "Enabled status is required")

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../service/payment.service';
 import { MerchantService } from '../../service/merchants.service';
+import { Subscription } from '../../models/payment_method.model';
 
 @Component({
   selector: 'app-payment',
@@ -12,26 +13,36 @@ import { MerchantService } from '../../service/merchants.service';
   styleUrl: './payment.component.scss'
 })
 export class PaymentComponent implements OnInit {
-  merchantId: string | null = null;
+  merchantId!: number;
   transactionId: string | null = null;
   isLoading = signal(false);
-  paymentMethods = signal<any[]>([]);
+  paymentMethods = signal<Subscription[]>([]);
 
   constructor(
     private route: ActivatedRoute,
     private paymentService: PaymentService,
-    private router: Router
+    private router: Router,
+    private merchantService: MerchantService
   ) { }
 
   ngOnInit(): void {
-    this.merchantId = this.route.snapshot.paramMap.get('merchantId');
-    this.transactionId = this.route.snapshot.queryParamMap.get('transactionId');
-    this.loadAvailablePaymentMethods(this.merchantId!);
-  }
+    const merchantIdParam = this.route.snapshot.paramMap.get('merchantId');
 
-  loadAvailablePaymentMethods(merchantId: string): void {
+    if (!merchantIdParam || isNaN(Number(merchantIdParam))) {
+      console.error('Invalid merchantId in route');
+      return;
+    }
+
+    this.merchantId = Number(merchantIdParam);
+    this.transactionId =
+    this.route.snapshot.queryParamMap.get('transactionId');
+
+  this.loadAvailablePaymentMethods();
+}
+
+  loadAvailablePaymentMethods(): void {
     this.isLoading.set(true);
-    this.paymentService.getAvailablePaymentMethods(merchantId).subscribe({
+    this.merchantService.getSubscriptions(this.merchantId).subscribe({
       next: (response) => {
         this.paymentMethods.set(response);
         this.isLoading.set(false);
@@ -43,8 +54,8 @@ export class PaymentComponent implements OnInit {
     });
   }
 
-  selectedPaymentMethod(method: any): void {
-    this.paymentService.initiatePayment(this.transactionId!, method).subscribe({
+  selectedPaymentMethod(sub: Subscription): void {
+    this.paymentService.initiatePayment(this.transactionId!, sub.id).subscribe({
       next: (response) => {
         if (response.paymentUrl)
           window.location.href = response.paymentUrl;

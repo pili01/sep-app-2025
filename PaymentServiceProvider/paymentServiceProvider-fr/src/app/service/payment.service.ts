@@ -12,12 +12,13 @@ export class PaymentService {
     return this.http.post<any>(`${this.apiUrl}/init`, request);
   }
 
-  getAvailablePaymentMethods(merchantId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/subscriptions/${merchantId}`);
-  }
+  // deprecated 
+  // getSubscribedPaymentMethods(merchantId: string): Observable<any> {
+  //   return this.http.get<any>(`${this.apiUrl}/subscriptions/${merchantId}`);
+  // }
 
-  initiatePayment(transactionId: string, paymentMethodCode: string): Observable<any> {
-    const payload = { transactionId, paymentMethodCode };
+  initiatePayment(transactionId: string, subscriptionId: number): Observable<any> {
+    const payload = { transactionId, subscriptionId };
     return this.http.post<any>(`${this.apiUrl}/initiate`, payload);
   }
 }

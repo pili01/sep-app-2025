@@ -2,11 +2,25 @@ package com.example.PaymentServiceProviderSEP.repository;
 
 import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
     boolean existsByName(String name);
     Optional<PaymentMethod> findByName(String name);
     Optional<PaymentMethod> findFirstByOrderByCheckIndexAscIdAsc();
+    @Query("""
+    SELECT pm
+    FROM PaymentMethod pm
+    WHERE pm.active = true
+      AND pm.id NOT IN (
+          SELECT s.paymentMethod.id
+          FROM MerchantPaymentMethodSubscription s
+          WHERE s.merchant.id = :merchantId
+      )
+""")
+    List<PaymentMethod> findAvailableForMerchant(@Param("merchantId") Long merchantId);
 }

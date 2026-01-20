@@ -63,7 +63,8 @@ public class PSPCoreClient {
                 "name", "PSPBank",
                 "hostname", hostname,
                 "statusUrl", "/api/health",
-                "paymentUrl", "/api/pay"
+                "paymentUrl", "/api/pay",
+                "paymentMethodCode", "BANK_CARD"
         );
 
         try {
