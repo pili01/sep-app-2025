@@ -43,14 +43,15 @@ public class PaymentController {
     public record PaymentInitiateRequest(
             @NotNull Long transactionId,
             @NotNull Long subscriptionId
-    ) {}
+    ) {
+    }
 
     // metoda refaktorisana da radi za sad
     // za buduci razvoj je potrebno izbaciti grananje na osnovu enuma
     // i staviti da se request prebacuje na microservis
     // koji se dobija iz PaymentMethod-a koji je odabrao korisnik
     @PostMapping("/initiate")
-    public ResponseEntity<?> initiatePayment( @Valid @RequestBody PaymentInitiateRequest request) {
+    public ResponseEntity<?> initiatePayment(@Valid @RequestBody PaymentInitiateRequest request) {
         try {
             MerchantPaymentMethodSubscription subscription = merchantPaymentMethodSubscriptionService.getSubscriptionById(request.subscriptionId);
 
@@ -60,9 +61,7 @@ public class PaymentController {
                 case BANK_CARD, BANK_QR -> {
                     paymentInitResponseDTO = bankService.requestPaymentParametersFromBank(subscription, request.transactionId);
                 }
-                case PAYPAL -> {
-                }
-                case CRYPTO_BTC -> {
+                case CUSTOM -> {
                 }
                 default -> throw new IllegalArgumentException("Unsupported payment method code");
             }

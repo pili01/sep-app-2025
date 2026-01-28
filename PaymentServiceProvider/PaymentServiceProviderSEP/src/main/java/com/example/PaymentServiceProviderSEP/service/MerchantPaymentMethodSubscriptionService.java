@@ -130,7 +130,8 @@ public class MerchantPaymentMethodSubscriptionService {
                 entity.getEnabled(),
                 entity.getPaymentMethod().isActive(),
                 entity.getConfigJson(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getPaymentMethod().getIconPath()
         );
     }
 }

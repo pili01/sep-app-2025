@@ -17,4 +17,7 @@ public class PaymentMethodConnectRequest {
     private String statusUrl;
     private String paymentUrl;
     private String paymentMethodCode;
+    private String iconPath;
+    private Boolean active;
+    private Boolean enabled;
 }

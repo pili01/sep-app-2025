@@ -52,32 +52,45 @@ h2 {
 }
 
 .method-icon {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  border-radius: 16px;
   color: white;
   margin-right: 1.5rem;
   flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+
+  .method-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+  }
 }
 
 .method-details {
   flex: 1;
 
   h3 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1.25rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.35rem;
     color: #1a202c;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
-  p {
+  .method-code {
     margin: 0;
     color: #718096;
     font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 }
 

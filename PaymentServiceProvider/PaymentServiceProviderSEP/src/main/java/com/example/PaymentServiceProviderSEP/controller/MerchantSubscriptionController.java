@@ -39,6 +39,7 @@ public class MerchantSubscriptionController {
                                 pm.getName(),
                                 pm.getPaymentMethodCode().name(),
                                 pm.isActive(),
+                                pm.isEnabled(),
                                 pm.getLastHeartbeat()
                         ))
                         .toList()

@@ -17,8 +17,21 @@ public class PaymentMethodDTO {
     private String name;
     private String paymentMethodCode;
     private Boolean active;
+    private Boolean enabled;
     private LocalDateTime lastHeartbeat;
-//    private String hostname;
-//    private String healthEndpoint;
-//    private String paymentEndpoint;
+    private String hostname;
+    private String healthEndpoint;
+    private String paymentEndpoint;
+    private LocalDateTime createdAt;
+    private String iconPath;
+
+    // Constructor for backward compatibility
+    public PaymentMethodDTO(Long id, String name, String paymentMethodCode, Boolean active, Boolean enabled, LocalDateTime lastHeartbeat) {
+        this.id = id;
+        this.name = name;
+        this.paymentMethodCode = paymentMethodCode;
+        this.active = active;
+        this.enabled = enabled;
+        this.lastHeartbeat = lastHeartbeat;
+    }
 }

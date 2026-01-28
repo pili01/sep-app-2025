@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -37,6 +36,9 @@ public class PaymentMethod {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(nullable = false)
+    private boolean enabled;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -49,5 +51,8 @@ public class PaymentMethod {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "Payment method code is required")
-    private PaymentMethodCode paymentMethodCode = PaymentMethodCode.OTHER;
+    private PaymentMethodCode paymentMethodCode = PaymentMethodCode.CUSTOM;
+
+    @Column
+    private String iconPath;
 }

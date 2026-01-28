@@ -1,0 +1,14 @@
+{
+  "/auth": {
+    "target": "https://localhost:8441",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api": {
+    "target": "https://localhost:8441",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

@@ -29,7 +29,7 @@ public class Transaction {
     private String currency;
 
     /// id koji se dobije od banke za odredjeni web shop
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private String merchantIdFromBank;
 
     @Column(nullable = false, unique = true, updatable = false)

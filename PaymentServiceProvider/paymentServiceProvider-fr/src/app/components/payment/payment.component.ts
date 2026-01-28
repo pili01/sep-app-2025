@@ -10,7 +10,7 @@ import { Subscription } from '../../models/payment_method.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './payment.component.html',
-  styleUrl: './payment.component.scss'
+  styleUrl: './payment.component.scss',
 })
 export class PaymentComponent implements OnInit {
   merchantId!: number;
@@ -22,8 +22,8 @@ export class PaymentComponent implements OnInit {
     private route: ActivatedRoute,
     private paymentService: PaymentService,
     private router: Router,
-    private merchantService: MerchantService
-  ) { }
+    private merchantService: MerchantService,
+  ) {}
 
   ngOnInit(): void {
     const merchantIdParam = this.route.snapshot.paramMap.get('merchantId');
@@ -34,11 +34,10 @@ export class PaymentComponent implements OnInit {
     }
 
     this.merchantId = Number(merchantIdParam);
-    this.transactionId =
-    this.route.snapshot.queryParamMap.get('transactionId');
+    this.transactionId = this.route.snapshot.queryParamMap.get('transactionId');
 
-  this.loadAvailablePaymentMethods();
-}
+    this.loadAvailablePaymentMethods();
+  }
 
   loadAvailablePaymentMethods(): void {
     this.isLoading.set(true);
@@ -50,21 +49,37 @@ export class PaymentComponent implements OnInit {
       error: (error) => {
         this.isLoading.set(false);
         console.error('Error loading payment methods:', error);
-      }
+      },
     });
   }
 
   selectedPaymentMethod(sub: Subscription): void {
     this.paymentService.initiatePayment(this.transactionId!, sub.id).subscribe({
       next: (response) => {
-        if (response.paymentUrl)
-          window.location.href = response.paymentUrl;
-        else
-          alert('Payment URL not found in response');
+        if (response.paymentUrl) window.location.href = response.paymentUrl;
+        else alert('Payment URL not found in response');
       },
       error: (error) => {
         alert('Error initiating payment: ' + error.message);
-      }
+      },
     });
+  }
+
+  getIconUrl(iconPath: string | null | undefined): string {
+    if (!iconPath) {
+      return '';
+    }
+    return `/api/payment-methods/icon/${iconPath}`;
+  }
+
+  getMethodCodeLabel(code: string): string {
+    const codeMap: { [key: string]: string } = {
+      BANK_CARD: 'Bankarska kartica',
+      PAYPAL: 'PayPal',
+      CRYPTO: 'Kriptovalute',
+      BANK_TRANSFER: 'Bankovni transfer',
+      CUSTOM: 'Drugi načini',
+    };
+    return codeMap[code] || code;
   }
 }

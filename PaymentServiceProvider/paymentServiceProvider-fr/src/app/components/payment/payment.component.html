@@ -12,16 +12,19 @@
     <div class="payment-methods">
       <div *ngFor="let method of paymentMethods()" class="payment-method-card" (click)="selectedPaymentMethod(method)">
         <div class="method-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
+          @if (method.iconPath) {
+            <img [src]="getIconUrl(method.iconPath)" [alt]="method.paymentMethodName" class="method-icon-img">
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          }
         </div>
         <div class="method-details">
-          <h3>{{ method.paymentMethodCode }}</h3>
-          <p>{{ method.paymentMethodName }}</p>
-          <!-- <p>Visa, Mastercard</p> -->
+          <h3>{{ method.paymentMethodName }}</h3>
+          <p class="method-code">{{ getMethodCodeLabel(method.paymentMethodCode) }}</p>
         </div>
         <div class="method-arrow">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

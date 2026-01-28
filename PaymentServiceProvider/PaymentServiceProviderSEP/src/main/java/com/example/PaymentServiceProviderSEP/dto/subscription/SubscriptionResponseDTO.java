@@ -20,4 +20,5 @@ public class SubscriptionResponseDTO {
     private Boolean active;
     private String configJson;
     private LocalDateTime createdAt;
+    private String iconPath;
 }

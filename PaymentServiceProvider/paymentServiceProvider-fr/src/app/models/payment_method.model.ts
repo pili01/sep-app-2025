@@ -15,5 +15,6 @@ export interface Subscription {
   enabled: boolean;
   active: boolean;
   configJson: string;
-  createdAt: string;       
+  createdAt: string;
+  iconPath?: string | null;
 }

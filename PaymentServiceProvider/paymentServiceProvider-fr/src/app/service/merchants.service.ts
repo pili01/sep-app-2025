@@ -3,10 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Merchant, CreateMerchantDTO } from '../models/merchant.model';
 import { PaymentMethod, Subscription } from '../models/payment_method.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MerchantService {
-  private apiUrl = 'https://localhost:8442/api'; // Base API
+  private readonly apiUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -28,13 +29,19 @@ export class MerchantService {
     return this.http.get<any[]>(`${this.apiUrl}/subscriptions/available/${merchantId}`);
   }
 
-  updateSubscription(subId: number, payload: { enabled?: boolean; configJson?: string }): Observable<any> {
+  updateSubscription(
+    subId: number,
+    payload: { enabled?: boolean; configJson?: string },
+  ): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/subscriptions/${subId}`, payload);
   }
 
   createSubscription(merchantId: number, paymentMethod: any): Observable<any> {
-    const dto = {merchantAccountNumber: paymentMethod.merchantAccountNumber, configJson: paymentMethod.configJson,
-      paymentMethodId: paymentMethod.id}
+    const dto = {
+      merchantAccountNumber: paymentMethod.merchantAccountNumber,
+      configJson: paymentMethod.configJson,
+      paymentMethodId: paymentMethod.id,
+    };
 
     return this.http.post<any>(`${this.apiUrl}/subscriptions/merchant/${merchantId}`, dto);
   }
