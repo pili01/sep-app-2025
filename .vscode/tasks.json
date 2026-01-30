@@ -7,24 +7,24 @@
     {
       "label": "$(browser)🏦 Frontend › Bank › Start",
       "type": "shell",
-      "command": "cd Bank/bank-fr; npx ng serve --proxy-config proxy.conf.json",
-      // "command": "cd Bank/bank-fr; npx ng serve",
+      // "command": "cd Bank/bank-fr; npx ng serve --proxy-config proxy.conf.json",
+      "command": "cd Bank/bank-fr; npx ng serve",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },
     {
       "label": "$(browser)💰 Frontend › PSP › Start",
       "type": "shell",
-      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve --proxy-config proxy.conf.json",
-      // "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve",
+      // "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve --proxy-config proxy.conf.json",
+      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },
     {
       "label": "$(browser)🛒 Frontend › WS › Start",
       "type": "shell",
-      "command": "cd WebShop/webshop-fr; npx ng serve --proxy-config proxy.conf.json",
-      // "command": "cd WebShop/webshop-fr; npx ng serve",
+      // "command": "cd WebShop/webshop-fr; npx ng serve --proxy-config proxy.conf.json",
+      "command": "cd WebShop/webshop-fr; npx ng serve",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },

@@ -83,6 +83,10 @@
             <span class="detail-label">Ukupna cijena:</span>
             <span class="detail-value price">{{ rental.totalPrice | number:'1.2-2' }} €</span>
           </div>
+          <div class="detail-row payment-row" *ngIf="rental.paymentMethod">
+            <span class="detail-label">Način plaćanja:</span>
+            <span class="detail-value payment-method">{{ rental.paymentMethod }}</span>
+          </div>
         </div>
       </div>
 

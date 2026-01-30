@@ -17,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/subscriptions")
-@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class MerchantSubscriptionController {
 
@@ -46,6 +45,7 @@ public class MerchantSubscriptionController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/merchant/{merchantId}")
     public ResponseEntity<SubscriptionResponseDTO> create(
             @PathVariable Long merchantId,
@@ -59,6 +59,7 @@ public class MerchantSubscriptionController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<SubscriptionResponseDTO> update(
             @PathVariable Long id,
@@ -70,6 +71,7 @@ public class MerchantSubscriptionController {
         return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteSubscription(id);

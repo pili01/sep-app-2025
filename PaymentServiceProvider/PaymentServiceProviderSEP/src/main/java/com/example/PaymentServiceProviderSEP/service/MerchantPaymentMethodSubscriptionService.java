@@ -22,7 +22,7 @@ public class MerchantPaymentMethodSubscriptionService {
 
     private final MerchantPaymentMethodSubscriptionRepository subscriptionRepository;
     private final MerchantRepository merchantRepository;
-    private final BankClientService bankClientService;
+    private final HttpsClientService httpsClientService;
     private final PaymentMethodRepository paymentMethodRepository;
 
     @Transactional
@@ -61,7 +61,7 @@ public class MerchantPaymentMethodSubscriptionService {
         }
 
         if (paymentMethod.getPaymentMethodCode() == PaymentMethodCode.BANK_CARD) {
-            String merchantIdFromBank = bankClientService.getMerchantIdFromBankForAccountNumber(subscriptionRequestDTO.getMerchantAccountNumber());
+            String merchantIdFromBank = httpsClientService.getMerchantIdFromBankForAccountNumber(subscriptionRequestDTO.getMerchantAccountNumber());
             merchant.setMerchantIdFromBank(merchantIdFromBank);
         }
 

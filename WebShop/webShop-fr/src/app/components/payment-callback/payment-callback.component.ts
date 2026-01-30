@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './payment-callback.component.html',
-  styleUrl: './payment-callback.component.scss'
+  styleUrl: './payment-callback.component.scss',
 })
 export class PaymentCallbackComponent implements OnInit {
   isLoading = signal(true);
@@ -22,8 +22,8 @@ export class PaymentCallbackComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private paymentService: PaymentService,
-    private authService: AuthService
-  ) { }
+    private authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     if (!this.authService.isAuthenticated()) {
@@ -32,9 +32,9 @@ export class PaymentCallbackComponent implements OnInit {
     }
 
     // Čitam transactionId iz query parametra
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       const transactionId = params['transactionId'];
-      
+
       if (!transactionId) {
         this.errorMessage.set('Transaction ID nije pronađen u URL-u.');
         this.isLoading.set(false);
@@ -51,7 +51,7 @@ export class PaymentCallbackComponent implements OnInit {
     this.errorMessage.set(null);
     this.paymentStatus.set(null);
 
-        this.paymentService.getPaymentStatus(transactionId).subscribe({
+    this.paymentService.getPaymentStatus(transactionId).subscribe({
       next: (response) => {
         this.isLoading.set(false);
         this.paymentStatus.set(response.status);
@@ -69,7 +69,7 @@ export class PaymentCallbackComponent implements OnInit {
         this.isLoading.set(false);
         console.error('Error checking payment status:', error);
         this.errorMessage.set(error.error?.error || 'Greška pri proveri statusa plaćanja.');
-      }
+      },
     });
   }
 
@@ -77,5 +77,3 @@ export class PaymentCallbackComponent implements OnInit {
     this.router.navigate(['/my-rentals']);
   }
 }
-
-

@@ -1,0 +1,35 @@
+<div class="success-container">
+  <div class="success-card">
+    <div class="checkmark-wrapper">
+      <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+        <path style="color: red;background-color: blue;" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
+    </div>
+
+    <div class="confetti-wrapper">
+      <div class="confetti" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"></div>
+    </div>
+
+    <h1 class="success-title">Čestitamo!</h1>
+    <p class="success-message">Uspješno ste platili vaše iznajmljivanje</p>
+    
+    <div class="success-icon-animated">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+      </svg>
+    </div>
+
+    <div class="countdown-wrapper">
+      <p class="countdown-text">Preusmjeravanje za <span class="countdown-number">{{ countdown() }}</span> sekundi...</p>
+    </div>
+
+    <button class="success-button" (click)="navigateToRentals()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Idi na moja iznajmljivanja
+    </button>
+  </div>
+</div>

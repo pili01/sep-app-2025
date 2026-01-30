@@ -25,13 +25,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/merchants/handshake").permitAll()
+                        .requestMatchers("/api/subscriptions/**").permitAll()
                         .requestMatchers("/api/payment-methods/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers("/api/webhook/**").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
-

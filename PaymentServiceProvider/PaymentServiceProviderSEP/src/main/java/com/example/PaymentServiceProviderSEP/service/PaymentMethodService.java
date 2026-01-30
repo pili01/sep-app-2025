@@ -96,7 +96,6 @@ public class PaymentMethodService {
     }
 
     private void heartbeatAndIncrement(PaymentMethod method) {
-
         var client = restClientFactory.create(method.getHostname());
 
         try {

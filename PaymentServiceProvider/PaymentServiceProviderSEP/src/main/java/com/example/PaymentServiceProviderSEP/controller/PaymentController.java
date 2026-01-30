@@ -3,7 +3,6 @@ package com.example.PaymentServiceProviderSEP.controller;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
-import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import com.example.PaymentServiceProviderSEP.service.*;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,7 +21,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final BankService bankService;
+    private final PayService payService;
     private final PaymentMethodService paymentMethodService;
     private final MerchantPaymentMethodSubscriptionService merchantPaymentMethodSubscriptionService;
 
@@ -54,17 +52,7 @@ public class PaymentController {
     public ResponseEntity<?> initiatePayment(@Valid @RequestBody PaymentInitiateRequest request) {
         try {
             MerchantPaymentMethodSubscription subscription = merchantPaymentMethodSubscriptionService.getSubscriptionById(request.subscriptionId);
-
-            PaymentMethodCode paymentMethodCode = subscription.getPaymentMethod().getPaymentMethodCode();
-            PaymentInitResponseDTO paymentInitResponseDTO = null;
-            switch (paymentMethodCode) {
-                case BANK_CARD, BANK_QR -> {
-                    paymentInitResponseDTO = bankService.requestPaymentParametersFromBank(subscription, request.transactionId);
-                }
-                case CUSTOM -> {
-                }
-                default -> throw new IllegalArgumentException("Unsupported payment method code");
-            }
+            PaymentInitResponseDTO paymentInitResponseDTO = payService.requestPaymentParameters(subscription, request.transactionId);
             return ResponseEntity.ok(paymentInitResponseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

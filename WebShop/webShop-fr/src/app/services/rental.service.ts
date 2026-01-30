@@ -40,6 +40,7 @@ export interface Rental {
     pricePerDay: number;
   };
   status: 'DRAFT' | 'PURCHASED';
+  paymentMethod?: string;
   equipment?: Array<{
     id?: number;
     name: string;

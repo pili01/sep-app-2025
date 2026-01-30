@@ -46,6 +46,8 @@ public class RentalDto {
 
     private RentalStatus status = RentalStatus.DRAFT;
 
+    private String paymentMethod;
+
     private Set<EquipmentResponseDTO> equipment = new HashSet<>();
 
     @AssertTrue(message = "End date must be after start date")

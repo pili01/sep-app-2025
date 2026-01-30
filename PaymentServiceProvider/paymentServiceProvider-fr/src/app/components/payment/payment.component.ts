@@ -16,6 +16,7 @@ export class PaymentComponent implements OnInit {
   merchantId!: number;
   transactionId: string | null = null;
   isLoading = signal(false);
+  isProcessing = signal(false);
   paymentMethods = signal<Subscription[]>([]);
 
   constructor(
@@ -54,12 +55,18 @@ export class PaymentComponent implements OnInit {
   }
 
   selectedPaymentMethod(sub: Subscription): void {
+    this.isProcessing.set(true);
     this.paymentService.initiatePayment(this.transactionId!, sub.id).subscribe({
       next: (response) => {
-        if (response.paymentUrl) window.location.href = response.paymentUrl;
-        else alert('Payment URL not found in response');
+        if (response.paymentUrl) {
+          window.location.href = response.paymentUrl;
+        } else {
+          this.isProcessing.set(false);
+          alert('Payment URL not found in response');
+        }
       },
       error: (error) => {
+        this.isProcessing.set(false);
         alert('Error initiating payment: ' + error.message);
       },
     });

@@ -46,6 +46,12 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private PaymentMethodCode paymentMethod;
 
+    @Column
+    private Long paymentMethodId;
+
+    @Column
+    private Boolean merchantNotified = false;
+
     @Column(nullable = false, unique = true, updatable = false)
     private String STAN;
 
@@ -55,7 +61,8 @@ public class Transaction {
     @Column
     private LocalDateTime acquirerTimestamp; // od banke
 
-    public Transaction(String merchantId, Double amount, String currency, String merchantIdFromBank, String transactionId) {
+    public Transaction(String merchantId, Double amount, String currency, String merchantIdFromBank,
+            String transactionId) {
         this.merchantId = merchantId;
         this.amount = amount;
         this.currency = currency;
