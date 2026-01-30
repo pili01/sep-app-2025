@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/payment/status").permitAll() // Payment status check endpoint (for redirects from Bank)
+                        .requestMatchers("/api/webhook/**").permitAll() // Webhook endpoints from PSP
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

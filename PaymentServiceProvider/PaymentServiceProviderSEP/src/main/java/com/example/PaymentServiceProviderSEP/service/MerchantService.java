@@ -31,7 +31,7 @@ public class MerchantService {
         merchant.setSuccessUrl(dto.getSuccessUrl());
         merchant.setFailedUrl(dto.getFailedUrl());
         merchant.setErrorUrl(dto.getErrorUrl());
-        merchant.setStatus(MerchantStatus.DRAFT);
+        merchant.setStatus(MerchantStatus.ACTIVE);
 
         try {
             Merchant savedMerchant = merchantRepository.save(merchant);

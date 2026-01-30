@@ -1,11 +1,17 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
-
+  navItems = [
+    { title: 'Merchants', description: 'Manage merchants and their subscriptions', route: '/merchants', icon: '👥' },
+    { title: 'Payment Methods', description: 'Add and manage payment methods', route: '/payment-methods', icon: '💳' }
+  ];
 }

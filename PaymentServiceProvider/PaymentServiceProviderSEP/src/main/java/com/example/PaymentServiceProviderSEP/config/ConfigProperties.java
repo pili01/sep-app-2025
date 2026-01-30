@@ -31,4 +31,7 @@ public class ConfigProperties {
 
     @Value("${exchange.rate.api.url}")
     private String exchangeRateApiUrl;
+
+    @Value("${webhook.url}")
+    private String webhookUrl;
 }

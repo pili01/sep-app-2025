@@ -9,19 +9,19 @@ import { AuthService } from '../../service/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrl: './login.scss',
 })
 export class Login {
   credentials = {
     email: '',
-    password: ''
+    password: '',
   };
 
   errorMessage = signal<string | null>(null);
 
   constructor(
-    private authService: AuthService, 
-    private router: Router
+    private authService: AuthService,
+    private router: Router,
   ) {}
 
   handleLogin() {
@@ -30,12 +30,12 @@ export class Login {
     this.authService.login(this.credentials).subscribe({
       next: (response) => {
         console.log('Login successful');
-        this.router.navigate(['/merchants']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error(err);
         this.errorMessage.set('Invalid email or password. Please try again.');
-      }
+      },
     });
   }
 }

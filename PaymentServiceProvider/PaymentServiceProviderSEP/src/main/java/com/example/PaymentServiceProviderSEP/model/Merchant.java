@@ -48,5 +48,9 @@ public class Merchant {
     @Column(nullable = false)
     @NotBlank(message = "Error URL is required")
     private String errorUrl;
+
+    @Column(nullable = false)
+    @NotBlank(message = "Webhook URL is required")
+    private String webHookUrl;
 }
 

@@ -1,6 +1,8 @@
 package com.example.WebShopSEP.service;
 
 import com.example.WebShopSEP.config.ConfigProperties;
+import com.example.WebShopSEP.dto.CheckStatusRequest;
+import com.example.WebShopSEP.dto.CheckStatusResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
@@ -146,6 +148,18 @@ public class PSPClientService {
             throw new RuntimeException("Invalid response from PSP when getting transaction status");
         } catch (Exception e) {
             throw new RuntimeException("Failed to get transaction status from PSP: " + e.getMessage(), e);
+        }
+    }
+
+    public CheckStatusResponse checkPaymentStatus(CheckStatusRequest request) {
+        try {
+            return restClient.post()
+                    .uri("/api/webhook/check-status")
+                    .body(request)
+                    .retrieve()
+                    .body(CheckStatusResponse.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to check payment status with PSP: " + e.getMessage(), e);
         }
     }
 }

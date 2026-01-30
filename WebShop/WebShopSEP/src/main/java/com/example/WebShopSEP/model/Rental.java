@@ -46,6 +46,9 @@ public class Rental {
     @Column(name = "status", nullable = false)
     private RentalStatus status = RentalStatus.DRAFT;
 
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "rental_equipment",

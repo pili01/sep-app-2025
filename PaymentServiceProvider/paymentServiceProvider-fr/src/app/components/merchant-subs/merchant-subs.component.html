@@ -8,29 +8,51 @@
 
   @if (isLoading()) {
     <div class="loader-container">
-       <div class="loader"></div>
-       <p>Loading methods...</p>
+      <div class="loader"></div>
+      <p>Loading methods...</p>
     </div>
   } @else {
+
     <div class="methods-grid">
       @for (sub of subscriptions(); track sub.id) {
         <div class="method-card" [class.disabled]="!sub.enabled">
+
+          <!-- LEFT INFO -->
           <div class="method-info">
-            <span class="method-code">{{ sub.paymentMethodCode }}</span>
+            <span class="method-name">
+              {{ sub.paymentMethodName }}
+            </span>
+
+            <span class="method-code">
+              {{ sub.paymentMethodCode }}
+            </span>
+
             <span class="method-status">
-              <span class="dot" [class.active]="sub.enabled"></span>
-              {{ sub.enabled ? 'Active' : 'Inactive' }}
+              <span
+                class="dot"
+                [class.active]="sub.active"
+                [class.inactive]="!sub.active"
+              ></span>
+              {{ sub.active ? 'Online' : 'Offline' }}
             </span>
           </div>
-          
+
+          <!-- ENABLE SWITCH -->
           <label class="switch">
-            <input type="checkbox" [checked]="sub.enabled" (change)="toggleStatus(sub)">
+            <input
+              type="checkbox"
+              [checked]="sub.enabled"
+              (change)="toggleStatus(sub)"
+            />
             <span class="slider"></span>
           </label>
+
         </div>
       } @empty {
         <div class="empty-state">
-          <p class="empty-msg">No payment methods configured for this merchant.</p>
+          <p class="empty-msg">
+            No payment methods configured for this merchant.
+          </p>
         </div>
       }
     </div>

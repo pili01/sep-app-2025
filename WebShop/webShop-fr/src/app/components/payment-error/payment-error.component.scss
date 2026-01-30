@@ -1,0 +1,379 @@
+.error-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.error-card {
+  background: white;
+  border-radius: 24px;
+  padding: 4rem 3rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  animation: slideIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.warning-wrapper {
+  margin: 0 auto 2rem;
+  position: relative;
+}
+
+.warning-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 3;
+  stroke: #f59e0b;
+  stroke-miterlimit: 10;
+  margin: 0 auto;
+  color: #f59e0b;
+}
+
+.warning-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 3;
+  stroke: #f59e0b;
+  fill: none;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.warning-line {
+  stroke: #f59e0b;
+  stroke-width: 4;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  stroke-linecap: round;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+.warning-dot {
+  fill: #f59e0b;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-in 1.1s forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.broken-card-animation {
+  width: 120px;
+  height: 100px;
+  margin: 2rem auto;
+  color: #f59e0b;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.card-part {
+  stroke: #f59e0b;
+  fill: rgba(245, 158, 11, 0.1);
+}
+
+.card-left {
+  animation: slideLeft 1s ease-in-out infinite;
+}
+
+.card-right {
+  animation: slideRight 1s ease-in-out infinite;
+}
+
+.crack-line {
+  stroke: #dc2626;
+  stroke-width: 3;
+  stroke-dasharray: 5;
+  animation: crackAnimation 1.5s ease-in-out infinite;
+}
+
+.lightning-bolt {
+  stroke: #fbbf24;
+  stroke-width: 2;
+  fill: #fbbf24;
+  opacity: 0;
+  animation: flash 1.5s ease-in-out infinite;
+}
+
+@keyframes slideLeft {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+}
+
+@keyframes slideRight {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes crackAnimation {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes flash {
+  0%,
+  40%,
+  100% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+
+.error-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #f59e0b;
+  margin: 0 0 1rem 0;
+  animation: fadeSlide 0.6s ease-out 0.3s both;
+}
+
+.error-message {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+  animation: fadeSlide 0.6s ease-out 0.5s both;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-details {
+  display: flex;
+  gap: 1rem;
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 8px;
+  text-align: left;
+  animation: fadeSlide 0.6s ease-out 0.7s both;
+}
+
+.error-icon-wrapper {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.error-content {
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: #92400e;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: #78350f;
+    line-height: 1.5;
+  }
+}
+
+.suggestions-box {
+  text-align: left;
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+  animation: fadeSlide 0.6s ease-out 0.9s both;
+
+  h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #374151;
+    font-weight: 700;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: #4b5563;
+      line-height: 1.6;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      svg {
+        flex-shrink: 0;
+        color: #f59e0b;
+      }
+    }
+  }
+}
+
+.info-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+  animation: fadeSlide 0.6s ease-out 1.1s both;
+
+  svg {
+    flex-shrink: 0;
+    color: #2563eb;
+  }
+
+  p {
+    margin: 0;
+    color: #1e40af;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: left;
+  }
+}
+
+.countdown-wrapper {
+  margin: 2rem 0;
+  animation: fadeSlide 0.6s ease-out 1.3s both;
+}
+
+.countdown-text {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.countdown-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f59e0b;
+  display: inline-block;
+  min-width: 30px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  animation: fadeSlide 0.6s ease-out 1.5s both;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover svg {
+    transform: translateX(-3px);
+  }
+}
+
+@media (max-width: 640px) {
+  .error-card {
+    padding: 3rem 2rem;
+  }
+
+  .error-title {
+    font-size: 2rem;
+  }
+
+  .error-message {
+    font-size: 1.1rem;
+  }
+
+  .warning-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .broken-card-animation {
+    width: 100px;
+    height: 80px;
+  }
+}

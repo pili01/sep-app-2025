@@ -1,1 +1,17 @@
-<p>home works!</p>
+<div class="home-container">
+  <div class="welcome-section">
+    <h1>Payment Service Provider Dashboard</h1>
+    <p>Manage your merchants and payment methods</p>
+  </div>
+
+  <div class="nav-grid">
+    @for (item of navItems; track item.route) {
+      <a [routerLink]="item.route" class="nav-card">
+        <div class="icon">{{ item.icon }}</div>
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.description }}</p>
+        <span class="arrow">→</span>
+      </a>
+    }
+  </div>
+</div>

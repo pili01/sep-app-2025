@@ -1,0 +1,276 @@
+<div class="payment-methods-container">
+  <div class="header-row">
+    <h2>Payment Methods Management</h2>
+    <button class="btn-primary" (click)="openAddModal()">+ Add New Payment Method</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-spinner">Loading...</div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-message">
+      {{ errorMessage() }}
+      <button class="close-error" (click)="errorMessage.set(null)">&times;</button>
+    </div>
+  }
+
+  <div class="table-card">
+    <table class="psp-table">
+      <thead>
+        <tr>
+          <th>Icon</th>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Hostname</th>
+          <th>Status</th>
+          <th>Enabled</th>
+          <th>Last Heartbeat</th>
+          <th class="text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (method of paymentMethods(); track method.id) {
+          <tr>
+            <td class="icon-cell">
+              @if (method.iconPath) {
+                <img [src]="getIconUrl(method.iconPath)" [alt]="method.name" class="method-icon">
+              } @else {
+                <div class="icon-placeholder">📄</div>
+              }
+            </td>
+            <td><strong>{{ method.name }}</strong></td>
+            <td><span class="code-badge">{{ getMethodCode(method.paymentMethodCode) }}</span></td>
+            <td class="hostname-cell">{{ method.hostname }}</td>
+            <td>
+              <span class="status-pill" [attr.data-status]="method.active ? 'active' : 'inactive'">
+                {{ method.active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [attr.data-status]="method.enabled ? 'enabled' : 'disabled'">
+                {{ method.enabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </td>
+            <td class="heartbeat-cell">
+              {{ method.lastHeartbeat ? (method.lastHeartbeat | date: 'short') : 'N/A' }}
+            </td>
+            <td class="text-right">
+              <button class="btn-toggle-status" (click)="toggleActive(method)" title="Toggle Status">
+                {{ method.enabled ? '⚙️ Disable' : '✓ Enable' }}
+              </button>
+              <button class="btn-view" (click)="openDetails(method)">View</button>
+              <button class="btn-edit" (click)="openEditModal(method)">Edit</button>
+            </td>
+          </tr>
+        }
+        @if (paymentMethods().length === 0 && !loading()) {
+          <tr>
+            <td colspan="7" class="text-center no-data">No payment methods found</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (isModalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalTitle() }}</h3>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (modalMode() === 'DETAILS') {
+          <div class="details-view">
+            @if (selectedPaymentMethod()?.iconPath) {
+              <div class="detail-row icon-display">
+                <label>Icon</label>
+                <img [src]="getIconUrl(selectedPaymentMethod()?.iconPath)" [alt]="selectedPaymentMethod()?.name" class="detail-icon">
+              </div>
+            }
+
+            <div class="detail-row">
+              <label>Name</label>
+              <p>{{ selectedPaymentMethod()?.name }}</p>
+            </div>
+
+            <div class="detail-row">
+              <label>Payment Method Code</label>
+              <p>
+                <span class="code-badge">{{ getMethodCode(selectedPaymentMethod()?.paymentMethodCode) }}</span>
+              </p>
+            </div>
+
+            <div class="detail-row">
+              <label>Hostname</label>
+              <p class="url-text">{{ selectedPaymentMethod()?.hostname }}</p>
+            </div>
+
+            <div class="detail-row">
+              <label>Health Endpoint</label>
+              <p class="url-text">{{ selectedPaymentMethod()?.healthEndpoint }}</p>
+            </div>
+
+            <div class="detail-row">
+              <label>Payment Endpoint</label>
+              <p class="url-text">{{ selectedPaymentMethod()?.paymentEndpoint }}</p>
+            </div>
+
+            <div class="detail-row">
+              <label>Status</label>
+              <p>
+                <span class="status-pill" [attr.data-status]="selectedPaymentMethod()?.enabled ? 'enabled' : 'disabled'">
+                  {{ selectedPaymentMethod()?.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </p>
+            </div>
+
+            <div class="detail-row">
+              <label>Created At</label>
+              <p>{{ selectedPaymentMethod()?.createdAt | date: 'medium' }}</p>
+            </div>
+
+            <div class="detail-row">
+              <label>Last Heartbeat</label>
+              <p>{{ selectedPaymentMethod()?.lastHeartbeat ? (selectedPaymentMethod()?.lastHeartbeat | date: 'medium') : 'N/A' }}</p>
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn-edit" (click)="openEditModal(selectedPaymentMethod())">Edit</button>
+              <button class="btn-danger" (click)="onDelete(selectedPaymentMethod())">Delete</button>
+              <button class="btn-secondary" (click)="closeModal()">Close</button>
+            </div>
+          </div>
+        }
+        @else {
+          <form (ngSubmit)="onSave()">
+            @if (errorMessage()) {
+              <div class="form-error">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <div class="form-group">
+              <label for="name">Payment Method Name *</label>
+              <input
+                id="name"
+                [(ngModel)]="newPaymentMethod.name"
+                name="name"
+                type="text"
+                required
+                placeholder="e.g. PayPal Integration"
+                class="form-control"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="code">Payment Method Code *</label>
+              <select
+                id="code"
+                [(ngModel)]="newPaymentMethod.paymentMethodCode"
+                name="paymentMethodCode"
+                class="form-control"
+              >
+                @for (code of paymentMethodCodes; track code.value) {
+                  <option [value]="code.value">{{ code.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Payment Method Icon</label>
+              <div class="icon-upload-section">
+                @if (iconPreview()) {
+                  <div class="icon-preview-container">
+                    <img [src]="iconPreview()" alt="Icon preview" class="icon-preview">
+                    <button type="button" class="btn-remove-icon" (click)="removeIcon()">Remove</button>
+                  </div>
+                } @else {
+                  <button type="button" class="btn-upload-icon" (click)="triggerFileInput()">
+                    📤 Upload Icon (PNG, JPG, SVG)
+                  </button>
+                }
+                <small class="help-text">Maximum file size: 2MB. Supported formats: PNG, JPG, SVG, GIF</small>
+              </div>
+              <input
+                #fileInput
+                type="file"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                style="display: none"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="hostname">Hostname *</label>
+              <input
+                id="hostname"
+                [(ngModel)]="newPaymentMethod.hostname"
+                name="hostname"
+                type="url"
+                required
+                placeholder="https://payment-provider.com"
+                class="form-control"
+              >
+              <small class="help-text">Base URL of the payment provider</small>
+            </div>
+
+            <div class="form-group">
+              <label for="healthEndpoint">Health Check Endpoint *</label>
+              <input
+                id="healthEndpoint"
+                [(ngModel)]="newPaymentMethod.healthEndpoint"
+                name="healthEndpoint"
+                type="url"
+                required
+                placeholder="https://payment-provider.com/api/health"
+                class="form-control"
+              >
+              <small class="help-text">Endpoint used for health checks and heartbeat monitoring</small>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentEndpoint">Payment Processing Endpoint *</label>
+              <input
+                id="paymentEndpoint"
+                [(ngModel)]="newPaymentMethod.paymentEndpoint"
+                name="paymentEndpoint"
+                type="url"
+                required
+                placeholder="https://payment-provider.com/api/process"
+                class="form-control"
+              >
+              <small class="help-text">Endpoint where payment transactions are processed</small>
+            </div>
+
+            <div class="form-group">
+              <label for="enabled">
+                <input
+                  id="enabled"
+                  [(ngModel)]="newPaymentMethod.enabled"
+                  name="enabled"
+                  type="checkbox"
+                  class="form-checkbox"
+                >
+                Enable
+              </label>
+              <small class="help-text">Enable this payment method for use</small>
+            </div>
+
+            <div class="modal-actions">
+              <button type="submit" class="save-btn" [disabled]="loading() || uploadingFile()">
+                {{ uploadingFile() ? 'Uploading Icon...' : (loading() ? 'Saving...' : (modalMode() === 'ADD' ? 'Add Payment Method' : 'Update Payment Method')) }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="loading() || uploadingFile()">
+                Cancel
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  </div>
+}

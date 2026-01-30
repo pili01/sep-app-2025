@@ -1,21 +1,23 @@
 package com.example.PaymentServiceProviderSEP.service;
 
-import com.example.PaymentServiceProviderSEP.config.ConfigProperties;
-import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
-import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
-import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
-import com.example.PaymentServiceProviderSEP.model.*;
-import com.example.PaymentServiceProviderSEP.repository.MerchantPaymentMethodSubscriptionRepository;
-import com.example.PaymentServiceProviderSEP.repository.MerchantRepository;
-import com.example.PaymentServiceProviderSEP.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.PaymentServiceProviderSEP.config.ConfigProperties;
+import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
+import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
+import com.example.PaymentServiceProviderSEP.model.Merchant;
+import com.example.PaymentServiceProviderSEP.model.MerchantStatus;
+import com.example.PaymentServiceProviderSEP.model.Transaction;
+import com.example.PaymentServiceProviderSEP.model.TransactionStatus;
+import com.example.PaymentServiceProviderSEP.repository.MerchantRepository;
+import com.example.PaymentServiceProviderSEP.repository.TransactionRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class PaymentService {
     private final ConfigProperties configProperties;
     private final TransactionService transactionService;
     private final TransactionRepository transactionRepository;
+    private final MerchantWebhookService merchantWebhookService;
 
     @Transactional
     public Map<String, String> initializePayment(PaymentInitRequestDTO request) {
@@ -41,18 +44,19 @@ public class PaymentService {
             throw new RuntimeException("Invalid merchant credentials");
         }
 
-        Transaction transaction = new Transaction(merchant.getMerchantId(), request.getAmount(), request.getCurrency(), merchant.getMerchantIdFromBank(), request.getMerchantOrderId());
+        Transaction transaction = new Transaction(merchant.getMerchantId(), request.getAmount(), request.getCurrency(),
+                merchant.getMerchantIdFromBank(), request.getMerchantOrderId());
         Transaction createdTransaction = transactionService.createTransaction(transaction);
         if (createdTransaction == null) {
             throw new RuntimeException("Failed to create transaction");
         }
 
-        String redirectionUrl = configProperties.getFrontendBaseUrl() + "/payment/" + merchant.getId() + "?transactionId=" + createdTransaction.getId();
+        String redirectionUrl = configProperties.getFrontendBaseUrl() + "/payment/" + merchant.getId()
+                + "?transactionId=" + createdTransaction.getId();
 
         return Map.of(
                 "redirectionUrl", redirectionUrl,
-                "message", "Payment initialized successfully"
-        );
+                "message", "Payment initialized successfully");
     }
 
     @Transactional
@@ -83,6 +87,9 @@ public class PaymentService {
             throw new RuntimeException("Invalid status: " + statusDTO.getStatus());
         }
         transactionRepository.save(transaction);
+
+        // Notify merchant via webhook
+        merchantWebhookService.notifyMerchant(transaction);
 
         Merchant merchant = merchantRepository.findByMerchantId(transaction.getMerchantId())
                 .orElseThrow(() -> new RuntimeException("Merchant not found"));

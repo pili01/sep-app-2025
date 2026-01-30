@@ -27,6 +27,7 @@ public class RentalService {
     private final TransactionRepository transactionRepository;
     private final RentalModelMapper rentalModelMapper;
     private final PSPClientService pspClientService;
+    private final ConfigProperties config;
 
     @Transactional(readOnly = false)
     public String createRental(@Valid RentalDto rentalDto, String userEmail) {
@@ -114,8 +115,13 @@ public class RentalService {
         }
 
         Transaction transaction = new Transaction(rental.getUser(), rental.getId());
+        transaction.setAmount(rental.getTotalPrice());
+        transaction.setCurrency(config.getCurrency());
+        
         while (transactionRepository.existsByTransactionId(transaction.getTransactionId())) {
             transaction = new Transaction(rental.getUser(), rental.getId());
+            transaction.setAmount(rental.getTotalPrice());
+            transaction.setCurrency(config.getCurrency());
         }
         Transaction savedTransaction = transactionRepository.save(transaction);
 

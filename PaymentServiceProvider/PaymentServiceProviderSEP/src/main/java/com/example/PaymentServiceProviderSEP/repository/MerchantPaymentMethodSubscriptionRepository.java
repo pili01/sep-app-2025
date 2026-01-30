@@ -1,8 +1,11 @@
 package com.example.PaymentServiceProviderSEP.repository;
 
 import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
+import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,10 +18,11 @@ public interface MerchantPaymentMethodSubscriptionRepository extends JpaReposito
 
     List<MerchantPaymentMethodSubscription> findByMerchantIdAndEnabledTrue(Long merchantId);
 
+    @Query("select s from MerchantPaymentMethodSubscription s join fetch s.paymentMethod where s.id = :id")
+    Optional<MerchantPaymentMethodSubscription> findByIdWithPaymentMethod(@Param("id") Long id);
+
     long countByMerchantIdAndEnabledTrue(Long merchantId);
 
-    Optional<MerchantPaymentMethodSubscription> findByMerchantIdAndPaymentMethodCode(Long merchantId, PaymentMethodCode paymentMethodCode);
-
-    boolean existsByMerchantIdAndPaymentMethodCode(Long merchantId, PaymentMethodCode paymentMethodCode);
+    boolean existsByMerchantIdAndPaymentMethodId(Long merchantId, Long paymentMethodId);
 }
 

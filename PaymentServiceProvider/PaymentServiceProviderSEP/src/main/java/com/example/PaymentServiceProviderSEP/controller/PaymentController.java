@@ -3,18 +3,15 @@ package com.example.PaymentServiceProviderSEP.controller;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentInitResponseDTO;
 import com.example.PaymentServiceProviderSEP.dto.payment.PaymentStatusDTO;
-import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
+import com.example.PaymentServiceProviderSEP.model.MerchantPaymentMethodSubscription;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
-import com.example.PaymentServiceProviderSEP.service.BankService;
-import com.example.PaymentServiceProviderSEP.service.MerchantPaymentMethodSubscriptionService;
-import com.example.PaymentServiceProviderSEP.service.MerchantService;
-import com.example.PaymentServiceProviderSEP.service.PaymentService;
+import com.example.PaymentServiceProviderSEP.service.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -24,7 +21,8 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final BankService bankService;
+    private final PayService payService;
+    private final PaymentMethodService paymentMethodService;
     private final MerchantPaymentMethodSubscriptionService merchantPaymentMethodSubscriptionService;
 
     @PostMapping("/init")
@@ -39,32 +37,22 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/subscriptions/{merchantId}")
-    public ResponseEntity<?> getMerchantSubscriptions(@PathVariable Long merchantId) {
-        List<String> dtos = merchantPaymentMethodSubscriptionService.getActiveSubscriptionsByMerchantId(merchantId)
-                .stream()
-                .map(sub -> sub.getPaymentMethodCode().name())
-                .toList();
-        return ResponseEntity.ok(dtos);
+
+    public record PaymentInitiateRequest(
+            @NotNull Long transactionId,
+            @NotNull Long subscriptionId
+    ) {
     }
 
+    // metoda refaktorisana da radi za sad
+    // za buduci razvoj je potrebno izbaciti grananje na osnovu enuma
+    // i staviti da se request prebacuje na microservis
+    // koji se dobija iz PaymentMethod-a koji je odabrao korisnik
     @PostMapping("/initiate")
-    public ResponseEntity<?> initiatePayment(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> initiatePayment(@Valid @RequestBody PaymentInitiateRequest request) {
         try {
-            PaymentMethodCode paymentMethodCode = PaymentMethodCode.valueOf(request.get("paymentMethodCode"));
-            PaymentInitResponseDTO paymentInitResponseDTO = null;
-            switch (paymentMethodCode) {
-                case BANK_CARD, BANK_QR -> {
-                    paymentInitResponseDTO = bankService.requestPaymentParametersFromBank(request, paymentMethodCode);
-                }
-                case PAYPAL -> {
-                    request.put("paymentMethodCode", "PAYPAL");
-                }
-                case CRYPTO_BTC -> {
-                    request.put("paymentMethodCode", "CRYPTO_BTC");
-                }
-                default -> throw new IllegalArgumentException("Unsupported payment method code");
-            }
+            MerchantPaymentMethodSubscription subscription = merchantPaymentMethodSubscriptionService.getSubscriptionById(request.subscriptionId);
+            PaymentInitResponseDTO paymentInitResponseDTO = payService.requestPaymentParameters(subscription, request.transactionId);
             return ResponseEntity.ok(paymentInitResponseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

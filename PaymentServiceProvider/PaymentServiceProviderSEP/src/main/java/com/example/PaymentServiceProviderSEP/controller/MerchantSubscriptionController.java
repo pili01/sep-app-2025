@@ -1,5 +1,6 @@
 package com.example.PaymentServiceProviderSEP.controller;
 
+import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodDTO;
 import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionRequestDTO;
 import com.example.PaymentServiceProviderSEP.dto.subscription.SubscriptionResponseDTO;
 import com.example.PaymentServiceProviderSEP.dto.subscription.UpdateSubRequestDTO;
@@ -16,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/subscriptions")
-@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class MerchantSubscriptionController {
 
@@ -24,51 +24,57 @@ public class MerchantSubscriptionController {
 
     @GetMapping("/merchant/{merchantId}")
     public ResponseEntity<List<SubscriptionResponseDTO>> getMerchantSubscriptions(@PathVariable Long merchantId) {
-        List<SubscriptionResponseDTO> dtos = service.getSubscriptionsByMerchantId(merchantId)
-                .stream()
-                .map(this::convertToDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok( service.getSubscriptionsByMerchantId(merchantId));
     }
 
+    @GetMapping("/available/{merchantId}")
+    public ResponseEntity<List<PaymentMethodDTO>> getAvailableForMerchant(
+            @PathVariable Long merchantId) {
+        return ResponseEntity.ok(
+                service.getAvailablePaymentMethodsForMerchant(merchantId)
+                        .stream()
+                        .map(pm -> new PaymentMethodDTO(
+                                pm.getId(),
+                                pm.getName(),
+                                pm.getPaymentMethodCode().name(),
+                                pm.isActive(),
+                                pm.isEnabled(),
+                                pm.getLastHeartbeat()
+                        ))
+                        .toList()
+        );
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/merchant/{merchantId}")
     public ResponseEntity<SubscriptionResponseDTO> create(
             @PathVariable Long merchantId,
             @RequestBody @Valid SubscriptionRequestDTO dto) {
         try{
-            MerchantPaymentMethodSubscription saved = service.createSubscription(
+            SubscriptionResponseDTO saved = service.createSubscription(
                     merchantId, dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(saved));
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
             throw new RuntimeException("Error creating subscription: " + e.getMessage());
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<SubscriptionResponseDTO> update(
             @PathVariable Long id,
             @RequestBody UpdateSubRequestDTO dto) {
 
-        MerchantPaymentMethodSubscription updated = service.updateSubscription(
+        SubscriptionResponseDTO updated = service.updateSubscription(
                 id, dto.getEnabled(), dto.getConfigJson());
 
-        return ResponseEntity.ok(convertToDto(updated));
+        return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteSubscription(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private SubscriptionResponseDTO convertToDto(MerchantPaymentMethodSubscription entity) {
-        return new SubscriptionResponseDTO(
-                entity.getId(),
-                entity.getMerchant().getId(),
-                entity.getPaymentMethodCode(),
-                entity.getEnabled(),
-                entity.getConfigJson(),
-                entity.getCreatedAt()
-        );
     }
 }
