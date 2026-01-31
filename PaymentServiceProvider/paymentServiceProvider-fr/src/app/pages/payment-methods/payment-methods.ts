@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, ViewChild, ElementRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../service/payment.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-payment-methods',
@@ -101,7 +102,7 @@ export class PaymentMethods implements OnInit {
     this.selectedPaymentMethod.set(method);
     this.newPaymentMethod = { ...method };
     this.selectedFile.set(null);
-    this.iconPreview.set(method.iconPath ? `/api/payment-methods/icon/${method.iconPath}` : null);
+    this.iconPreview.set(method.iconPath ? this.getIconUrl(method.iconPath) : null);
     this.modalMode.set('EDIT');
     this.errorMessage.set(null);
     this.isModalOpen.set(true);
@@ -299,6 +300,6 @@ export class PaymentMethods implements OnInit {
 
   getIconUrl(iconPath: string | null): string {
     if (!iconPath) return '';
-    return `/api/payment-methods/icon/${iconPath}`;
+    return `${environment.iconBaseUrl}/payment-methods/icon/${iconPath}`;
   }
 }

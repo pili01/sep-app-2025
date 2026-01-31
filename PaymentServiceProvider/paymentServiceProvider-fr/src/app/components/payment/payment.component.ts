@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../service/payment.service';
 import { MerchantService } from '../../service/merchants.service';
 import { Subscription } from '../../models/payment_method.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-payment',
@@ -76,7 +77,7 @@ export class PaymentComponent implements OnInit {
     if (!iconPath) {
       return '';
     }
-    return `/api/payment-methods/icon/${iconPath}`;
+    return `${environment.iconBaseUrl}/payment-methods/icon/${iconPath}`;
   }
 
   getMethodCodeLabel(code: string): string {
