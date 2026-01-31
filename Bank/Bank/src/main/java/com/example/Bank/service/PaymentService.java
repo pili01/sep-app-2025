@@ -1,8 +1,8 @@
 package com.example.Bank.service;
 
-import com.example.Bank.dto.PaymentDetailsResponse;
-import com.example.Bank.dto.PaymentProcessRequest;
-import com.example.Bank.dto.PaymentProcessResponse;
+import com.example.Bank.dto.payment.PaymentDetailsResponse;
+import com.example.Bank.dto.payment.PaymentProcessRequest;
+import com.example.Bank.dto.payment.PaymentProcessResponse;
 import com.example.Bank.dto.QrCodeData;
 import com.example.Bank.model.Account;
 import com.example.Bank.model.Card;
@@ -25,7 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
     private final PaymentTransactionRepository paymentTransactionRepository;
-    private final CardValidationService cardValidationService;
+    private final CardService cardService;
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
     private final AccountService accountService;
@@ -137,12 +137,12 @@ public class PaymentService {
         }
 
         String panDigits = request.getPan().replaceAll("\\D", "");
-        if (!cardValidationService.validateLuhn(panDigits)) {
+        if (!cardService.validateLuhn(panDigits)) {
             String redirectUrl = getErrorRedirectUrl(transaction);
             return new PaymentProcessResponse(false, "Invalid card number", null, null, redirectUrl);
         }
 
-        if (!cardValidationService.validateExpirationDate(request.getExpirationDate())) {
+        if (!cardService.validateExpirationDate(request.getExpirationDate())) {
             String redirectUrl = getErrorRedirectUrl(transaction);
             return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, redirectUrl);
         }
