@@ -53,4 +53,3 @@ public class Merchant {
     @NotBlank(message = "Webhook URL is required")
     private String webHookUrl;
 }
-

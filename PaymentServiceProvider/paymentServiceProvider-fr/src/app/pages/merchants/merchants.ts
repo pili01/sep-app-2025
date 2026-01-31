@@ -10,12 +10,12 @@ import { AddSub } from '../../components/add-merchant-subs/add-merchant-sub.comp
   standalone: true,
   imports: [CommonModule, FormsModule, MerchantSubs, AddSub],
   templateUrl: './merchants.html',
-  styleUrl: './merchants.scss'
+  styleUrl: './merchants.scss',
 })
 export class Merchants implements OnInit {
   merchants = signal<any[]>([]);
   selectedMerchant = signal<any | null>(null);
-  
+
   isModalOpen = signal(false);
   modalMode = signal<'ADD' | 'DETAILS' | 'SUBS' | 'ADD_SUB'>('ADD');
 
@@ -38,14 +38,16 @@ export class Merchants implements OnInit {
   });
   showSensitive = signal(false);
 
-  newMerchant = { name: '', successUrl: '', failedUrl: '', errorUrl: '' };
+  newMerchant = { name: '', webHookUrl: '', successUrl: '', failedUrl: '', errorUrl: '' };
 
   constructor(private merchantService: MerchantService) {}
 
-  ngOnInit() { this.loadMerchants(); }
+  ngOnInit() {
+    this.loadMerchants();
+  }
 
   loadMerchants() {
-    this.merchantService.getAll().subscribe(data => this.merchants.set(data));
+    this.merchantService.getAll().subscribe((data) => this.merchants.set(data));
   }
 
   openAddSubscription() {
@@ -80,9 +82,15 @@ export class Merchants implements OnInit {
       next: () => {
         this.loadMerchants();
         this.closeModal();
-        this.newMerchant = { name: '', successUrl: '', failedUrl: '', errorUrl: '' };
+        this.newMerchant = {
+          name: '',
+          webHookUrl: '',
+          successUrl: '',
+          failedUrl: '',
+          errorUrl: '',
+        };
       },
-      error: (err) => alert("Error: " + err.error)
+      error: (err) => alert('Error: ' + err.error),
     });
   }
 }

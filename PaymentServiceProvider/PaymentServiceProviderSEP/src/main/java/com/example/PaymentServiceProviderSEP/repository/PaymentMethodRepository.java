@@ -21,7 +21,7 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
     @Query("""
                 SELECT pm
                 FROM PaymentMethod pm
-                WHERE pm.active = true
+                WHERE (pm.active = true AND pm.paymentMethodCode='CUSTOM' OR pm.paymentMethodCode <> 'CUSTOM')
                   AND pm.id NOT IN (
                       SELECT s.paymentMethod.id
                       FROM MerchantPaymentMethodSubscription s

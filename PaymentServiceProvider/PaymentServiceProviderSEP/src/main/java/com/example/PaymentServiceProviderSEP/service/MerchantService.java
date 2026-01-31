@@ -28,6 +28,7 @@ public class MerchantService {
     public Merchant create(CreateMerchantDTO dto) {
         Merchant merchant = new Merchant();
         merchant.setName(dto.getName());
+        merchant.setWebHookUrl(dto.getWebHookUrl());
         merchant.setSuccessUrl(dto.getSuccessUrl());
         merchant.setFailedUrl(dto.getFailedUrl());
         merchant.setErrorUrl(dto.getErrorUrl());

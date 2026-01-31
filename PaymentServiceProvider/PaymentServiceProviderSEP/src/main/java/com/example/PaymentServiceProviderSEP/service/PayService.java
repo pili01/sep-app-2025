@@ -45,7 +45,7 @@ public class PayService {
             throw new RuntimeException("Merchant is not active");
         }
 
-        if (merchant.getId() != subscription.getMerchant().getId() || !subscription.getPaymentMethod().isActive() ||
+        if (merchant.getId() != subscription.getMerchant().getId() || (!subscription.getPaymentMethod().isActive() && subscription.getPaymentMethod().getPaymentMethodCode() == PaymentMethodCode.CUSTOM) ||
                 !subscription.getEnabled()) {
             throw new RuntimeException("Merchant does not have active "
                     + subscription.getPaymentMethod().getPaymentMethodCode() + " subscription");

@@ -57,6 +57,13 @@
       "group": { "kind": "build", "name": "Backend", "isDefault": true }
     },
     {
+      "label": "$(server)💸 Backend › PayPal › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PSPpayPal; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
       "label": "$(server)🛒 Backend › WS › Start",
       "type": "shell",
       "command": "cd WebShop/WebShopSEP; ./mvnw spring-boot:run",
@@ -68,6 +75,7 @@
       "dependsOn": [
         "$(server)🏦 Backend › Bank › Start",
         "$(server)💰 Backend › PSP › Start",
+        "$(server)💸 Backend › PayPal › Start",
         "$(server)🛒 Backend › WS › Start"
       ],
       "detail": "Run all backend apps",

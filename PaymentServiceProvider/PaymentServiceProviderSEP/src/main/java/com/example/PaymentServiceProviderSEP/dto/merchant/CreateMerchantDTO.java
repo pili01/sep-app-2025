@@ -15,6 +15,9 @@ public class CreateMerchantDTO {
     private String name;
 
     @NotBlank
+    private String webHookUrl;
+
+    @NotBlank
     private String successUrl;
 
     @NotBlank

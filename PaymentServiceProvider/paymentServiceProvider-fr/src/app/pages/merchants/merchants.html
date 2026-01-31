@@ -43,6 +43,9 @@
             <label>Merchant Name</label>
             <input [(ngModel)]="newMerchant.name" name="name" required placeholder="e.g. My Online Store">
             
+            <label>WebHook URL</label>
+            <input [(ngModel)]="newMerchant.webHookUrl" name="whUrl" required placeholder="https://example.com/webhook">
+            
             <label>Success URL</label>
             <input [(ngModel)]="newMerchant.successUrl" name="sUrl" required placeholder="https://example.com/success">
             
@@ -85,6 +88,7 @@
             </div>
 
             <div class="url-summary">
+              <p><strong>WebHook:</strong> {{ selectedMerchant().webHookUrl }}</p>
               <p><strong>Success:</strong> {{ selectedMerchant().successUrl }}</p>
               <p><strong>Failed:</strong> {{ selectedMerchant().failedUrl }}</p>
               <p><strong>Error:</strong> {{ selectedMerchant().errorUrl }}</p>

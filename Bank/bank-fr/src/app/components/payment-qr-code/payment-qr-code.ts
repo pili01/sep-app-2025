@@ -3,13 +3,14 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { environment } from '../../../environments/environment.prod';
 
 @Component({
   selector: 'app-payment-qr-code',
   imports: [CommonModule],
   templateUrl: './payment-qr-code.html',
   styleUrl: './payment-qr-code.scss',
-  standalone: true
+  standalone: true,
 })
 export class PaymentQrCode implements OnInit {
   paymentId: string | null = null;
@@ -17,13 +18,13 @@ export class PaymentQrCode implements OnInit {
   qrCodeBlob: Blob | null = null;
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
-  private apiUrl = 'https://localhost:8443/api/bank/qr';
+  private apiUrl = environment.apiBaseUrl + '/bank/qr';
 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private sanitizer: DomSanitizer
-  ) { }
+    private sanitizer: DomSanitizer,
+  ) {}
 
   ngOnInit(): void {
     this.paymentId = this.route.snapshot.paramMap.get('paymentId');
@@ -38,10 +39,16 @@ export class PaymentQrCode implements OnInit {
   loadQrCode(): void {
     if (!this.paymentId) return;
 
-    this.http.post(`${this.apiUrl}/generate/${this.paymentId}`, {}, { 
-      responseType: 'blob',
-      observe: 'response'
-    }).subscribe({
+    this.http
+      .post(
+        `${this.apiUrl}/generate/${this.paymentId}`,
+        {},
+        {
+          responseType: 'blob',
+          observe: 'response',
+        },
+      )
+      .subscribe({
         next: (response) => {
           if (response.body) {
             this.qrCodeBlob = response.body;
@@ -54,7 +61,7 @@ export class PaymentQrCode implements OnInit {
           console.error('Error loading QR code:', err);
           this.error.set('Greška pri učitavanju QR koda');
           this.loading.set(false);
-        }
+        },
       });
   }
 
