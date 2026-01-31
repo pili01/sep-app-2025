@@ -122,29 +122,4 @@ public class PSPCoreClient {
 
         log.info("Webhook notification sent successfully");
     }
-
-    public void connectToCorePSP() {
-
-        String hostname = "https://localhost:" + config.getServerPort();
-
-        Map<String, Object> requestBody = Map.of(
-                "name", "PayPal Payment Service",
-                "hostname", hostname,
-                "statusUrl", hostname + "/api/health",
-                "paymentUrl", hostname + "/api/payment/pay",
-                "paymentMethodCode", "PAYPAL"
-        );
-
-        try {
-            Map<String, Object> response = restClient.post()
-                    .uri(config.getPspCoreConnectEndpoint())
-                    .body(requestBody)
-                    .retrieve()
-                    .body(Map.class);
-
-            log.info("Successfully connected to Core PSP!");
-        } catch (Exception e) {
-            log.error("Error connecting to Core PSP", e);
-        }
-    }
 }

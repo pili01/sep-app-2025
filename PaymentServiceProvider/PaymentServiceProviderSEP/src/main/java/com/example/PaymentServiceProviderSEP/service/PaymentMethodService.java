@@ -39,43 +39,6 @@ public class PaymentMethodService {
         return paymentMethodRepository.existsByName(name);
     }
 
-    @Transactional
-    public void connect(PaymentMethodConnectRequest request) {
-
-        PaymentMethod paymentMethod = paymentMethodRepository
-                .findByName(request.getName())
-                .orElseGet(() -> {
-                    PaymentMethod pm = new PaymentMethod();
-                    pm.setName(request.getName());
-                    pm.setCheckIndex(0L);
-                    return pm;
-                });
-
-        paymentMethod.setLastHeartbeat(LocalDateTime.now());
-        paymentMethod.setEnabled(request.getEnabled());
-        paymentMethod.setActive(false);
-
-        if (!request.getHostname().equals(paymentMethod.getHostname())) {
-            paymentMethod.setHostname(request.getHostname());
-        }
-
-        if (!request.getStatusUrl().equals(paymentMethod.getHealthEndpoint())) {
-            paymentMethod.setHealthEndpoint(request.getStatusUrl());
-        }
-
-        if (!request.getPaymentUrl().equals(paymentMethod.getPaymentEndpoint())) {
-            paymentMethod.setPaymentEndpoint(request.getPaymentUrl());
-        }
-
-        PaymentMethodCode resolvedCode = resolvePaymentMethodCode(request.getPaymentMethodCode());
-
-        if (resolvedCode != paymentMethod.getPaymentMethodCode()) {
-            paymentMethod.setPaymentMethodCode(resolvedCode);
-        }
-
-        paymentMethodRepository.save(paymentMethod);
-    }
-
     private PaymentMethodCode resolvePaymentMethodCode(String rawCode) {
         if (rawCode == null || rawCode.isBlank()) {
             return PaymentMethodCode.CUSTOM;
@@ -91,35 +54,27 @@ public class PaymentMethodService {
     @Transactional
     public void heartbeatRoundRobin() {
 
-        paymentMethodRepository.findFirstByOrderByCheckIndexAscIdAsc()
-                .ifPresent(this::heartbeatAndIncrement);
+        paymentMethodRepository.findNextForHeartbeat(PaymentMethodCode.CUSTOM)
+                .ifPresent(this::heartbeat);
     }
 
-    private void heartbeatAndIncrement(PaymentMethod method) {
+    private void heartbeat(PaymentMethod method) {
         var client = restClientFactory.create(method.getHostname());
 
+        method.setLastHeartbeat(LocalDateTime.now());
+
         try {
-            var response = client.get()
+            client.get()
                     .uri(method.getHealthEndpoint())
                     .retrieve()
                     .toBodilessEntity();
 
-            if (response != null) {
-                System.out.println("Heartbeat response for " + method.getName() +
-                        " (" + method.getHostname() + "): " +
-                        response.getStatusCode());
-            }
-
-            method.setLastHeartbeat(LocalDateTime.now());
             method.setActive(true);
 
         } catch (Exception e) {
             method.setActive(false);
-            System.err.println("Failed heartbeat for " + method.getName() +
-                    " (" + method.getHostname() + "): " + e.getMessage());
         }
 
-        method.setCheckIndex(method.getCheckIndex() + 1);
         paymentMethodRepository.save(method);
     }
 
@@ -146,13 +101,12 @@ public class PaymentMethodService {
         paymentMethod.setHealthEndpoint(request.getStatusUrl());
         paymentMethod.setPaymentEndpoint(request.getPaymentUrl());
         paymentMethod.setPaymentMethodCode(resolvePaymentMethodCode(request.getPaymentMethodCode()));
-        
-        // Set iconPath, convert empty string to null
+
         String iconPath = request.getIconPath();
         paymentMethod.setIconPath(iconPath != null && !iconPath.trim().isEmpty() ? iconPath : null);
         
         paymentMethod.setEnabled(request.getEnabled() != null ? request.getEnabled() : false);
-        paymentMethod.setCheckIndex(0L);
+        paymentMethod.setActive(request.getActive() != null ? request.getActive() : false);
 
         PaymentMethod saved = paymentMethodRepository.save(paymentMethod);
         return mapToDTO(saved);
@@ -195,6 +149,46 @@ public class PaymentMethodService {
                 })
                 .orElse(null);
     }
+
+    @Transactional
+    public void ensureInternalPaymentMethodsExist() {
+        ensurePaymentMethodExists(
+                PaymentMethodCode.BANK_CARD,
+                "Bank Card",
+                "card.jpg"
+        );
+
+        ensurePaymentMethodExists(
+                PaymentMethodCode.BANK_QR,
+                "Bank QR",
+                "qrCode.jpg"
+        );
+    }
+
+    private void ensurePaymentMethodExists(
+            PaymentMethodCode code,
+            String name,
+            String iconPath
+    ) {
+        if (paymentMethodRepository.findByPaymentMethodCode(code).isPresent()) {
+            return;
+        }
+
+        PaymentMethod paymentMethod = new PaymentMethod();
+        paymentMethod.setName(name);
+        paymentMethod.setPaymentMethodCode(code);
+
+        paymentMethod.setHostname("internal");
+        paymentMethod.setHealthEndpoint("internal");
+        paymentMethod.setPaymentEndpoint("internal");
+
+        paymentMethod.setActive(true);
+        paymentMethod.setEnabled(true);
+        paymentMethod.setIconPath(iconPath);
+
+        paymentMethodRepository.save(paymentMethod);
+    }
+
 
     public ResponseEntity<?> uploadIcon(MultipartFile file) {
         try {
@@ -274,4 +268,43 @@ public class PaymentMethodService {
             this.message = message;
         }
     }
+
+    // deprecated povezivanje microservisa
+//    @Transactional
+//    public void connect(PaymentMethodConnectRequest request) {
+//
+//        PaymentMethod paymentMethod = paymentMethodRepository
+//                .findByName(request.getName())
+//                .orElseGet(() -> {
+//                    PaymentMethod pm = new PaymentMethod();
+//                    pm.setName(request.getName());
+//                    pm.setCheckIndex(0L);
+//                    return pm;
+//                });
+//
+//        paymentMethod.setLastHeartbeat(LocalDateTime.now());
+//        paymentMethod.setEnabled(request.getEnabled());
+//        paymentMethod.setActive(false);
+//
+//        if (!request.getHostname().equals(paymentMethod.getHostname())) {
+//            paymentMethod.setHostname(request.getHostname());
+//        }
+//
+//        if (!request.getStatusUrl().equals(paymentMethod.getHealthEndpoint())) {
+//            paymentMethod.setHealthEndpoint(request.getStatusUrl());
+//        }
+//
+//        if (!request.getPaymentUrl().equals(paymentMethod.getPaymentEndpoint())) {
+//            paymentMethod.setPaymentEndpoint(request.getPaymentUrl());
+//        }
+//
+//        PaymentMethodCode resolvedCode = resolvePaymentMethodCode(request.getPaymentMethodCode());
+//
+//        if (resolvedCode != paymentMethod.getPaymentMethodCode()) {
+//            paymentMethod.setPaymentMethodCode(resolvedCode);
+//        }
+//
+//        paymentMethodRepository.save(paymentMethod);
+//    }
+
 }

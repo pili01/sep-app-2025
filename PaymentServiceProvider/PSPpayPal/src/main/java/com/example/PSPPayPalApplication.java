@@ -15,9 +15,5 @@ public class PSPPayPalApplication {
 
     public static void main(String[] args) {
         var context = SpringApplication.run(PSPPayPalApplication.class, args);
-
-         PSPCoreClient client = context.getBean(PSPCoreClient.class);
-
-         client.connectToCorePSP();
     }
 }

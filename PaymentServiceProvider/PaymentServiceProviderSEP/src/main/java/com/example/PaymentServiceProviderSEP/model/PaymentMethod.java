@@ -45,9 +45,6 @@ public class PaymentMethod {
     @Column
     private LocalDateTime lastHeartbeat;
 
-    @Column(nullable = false)
-    private Long checkIndex;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "Payment method code is required")

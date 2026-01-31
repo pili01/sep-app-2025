@@ -16,7 +16,19 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
     
     Optional<PaymentMethod> findByPaymentMethodCode(PaymentMethodCode paymentMethodCode);
 
-    Optional<PaymentMethod> findFirstByOrderByCheckIndexAscIdAsc();
+    @Query("""
+    SELECT pm
+    FROM PaymentMethod pm
+    WHERE pm.enabled = true
+      AND pm.paymentMethodCode = :code
+    ORDER BY
+        CASE WHEN pm.lastHeartbeat IS NULL THEN 0 ELSE 1 END,
+        pm.lastHeartbeat ASC
+""")
+    Optional<PaymentMethod> findNextForHeartbeat(
+            @Param("code") PaymentMethodCode code
+    );
+
 
     @Query("""
                 SELECT pm

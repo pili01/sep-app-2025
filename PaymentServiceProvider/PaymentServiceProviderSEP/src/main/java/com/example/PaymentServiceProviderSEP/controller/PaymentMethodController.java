@@ -2,8 +2,6 @@ package com.example.PaymentServiceProviderSEP.controller;
 
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodConnectRequest;
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodDTO;
-import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
-import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import com.example.PaymentServiceProviderSEP.service.PaymentMethodService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,17 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment-methods")
@@ -30,14 +18,6 @@ import java.util.UUID;
 public class PaymentMethodController {
 
     private final PaymentMethodService paymentMethodService;
-
-    @PostMapping("/connect")
-    public ResponseEntity<PaymentMethodDTO> connect(
-            @RequestBody PaymentMethodConnectRequest request) {
-
-        paymentMethodService.connect(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
 
     @GetMapping
     public ResponseEntity<List<PaymentMethodDTO>> getAll() {
@@ -91,7 +71,7 @@ public class PaymentMethodController {
         return paymentMethodService.uploadIcon(file);
     }
 
-    @Scheduled(fixedRate = 30_000)
+    @Scheduled(fixedRateString = "${heartbeat.fixed-rate-ms}")
     public void heartbeat() {
         paymentMethodService.heartbeatRoundRobin();
     }

@@ -37,17 +37,12 @@ public class PaymentController {
         }
     }
 
-
     public record PaymentInitiateRequest(
             @NotNull Long transactionId,
             @NotNull Long subscriptionId
     ) {
     }
 
-    // metoda refaktorisana da radi za sad
-    // za buduci razvoj je potrebno izbaciti grananje na osnovu enuma
-    // i staviti da se request prebacuje na microservis
-    // koji se dobija iz PaymentMethod-a koji je odabrao korisnik
     @PostMapping("/initiate")
     public ResponseEntity<?> initiatePayment(@Valid @RequestBody PaymentInitiateRequest request) {
         try {
