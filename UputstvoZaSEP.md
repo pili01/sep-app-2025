@@ -29,6 +29,25 @@ webHook: https://localhost:8441/api/webhook/payment-notification
 d57312ec-84ee-41e9-bb51-c5f762ae9b8d
 kv6Wu/oh1iLJUA6qO4zUDZqMJdr+QTzfeirKiybMsz3P/4gtf35wQ/DA4QJPFybmFuRvcsh0x2BcdBwiXT/gAw==
 
+## Skripta za bazu banke
+
+```
+INSERT INTO public.account(
+	account_holder_name, account_number, balance, currency, deleted, merchant_id, user_id)
+	VALUES ('Strahinja Djukic', 840000003275384578, 100000, 'RSD', 'false', 'TEST_KUPAC',1);
+
+INSERT INTO public.account(
+	account_holder_name, account_number, balance, currency, deleted, merchant_id, user_id)
+	VALUES ('Ognjen Papovic', 845000000046384915, 100000, 'RSD', 'false', 'TEST_MERCHANT',2);
+
+INSERT INTO public.card(
+	card_number, cardholder_name, cvv, deleted, expiration_date, account_id)
+	VALUES (4111111111111111, 'Strahinja Djukic', '123', 'false' ,'12/26', 1);
+
+```
+
+
+
 ## Url za payment method:
 
 ```
