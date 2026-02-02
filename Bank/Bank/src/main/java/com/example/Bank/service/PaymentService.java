@@ -63,8 +63,11 @@ public class PaymentService {
         PaymentTransaction transaction = paymentTransactionRepository.findByPaymentId(paymentId).get();
 
         QrCodeData qrCodeData = new QrCodeData();
+
         Account merchantAccount = accountService.getAccountByMerchantId(transaction.getMerchantId());
-        qrCodeData.setR(merchantAccount.getAccountNumber());
+        String accNumber = cryptoService.decrypt(merchantAccount.getAccountNumberEnc());
+
+        qrCodeData.setR(accNumber);
         qrCodeData.setN(merchantAccount.getAccountHolderName());
         qrCodeData.setI(transaction.getAmount()); //zaokruzujem na 2 decimale
         qrCodeData.setS("Payment for rental in web shop");
@@ -77,7 +80,14 @@ public class PaymentService {
     public String createTestAccountAndCard() {
         Account account = new Account();
         account.setMerchantId("TEST_MERCHANT");
-        account.setAccountNumber("1234567890");
+
+        String accNumber = "1234567890";
+        String accNumberHash = cryptoService.hashDeterministic(accNumber);
+        String accNumberEnc = cryptoService.encrypt(accNumber);
+
+        account.setAccountNumberEnc(accNumberEnc);
+        account.setAccountNumberHash(accNumberHash);
+
         account.setBalance(1000.0);
         account.setCurrency("EUR");
         account.setDeleted(false);
@@ -250,7 +260,10 @@ public class PaymentService {
 
 
         Account fromAccount=accountService.getMyAccount(email);
-        Account toAccount=accountRepository.findByAccountNumberAndDeletedFalse(qrCodeData.getR())
+        String accountNumber = qrCodeData.getR();
+        String accNumberHash =  cryptoService.hashDeterministic(accountNumber);
+
+        Account toAccount=accountRepository.findByAccountNumberHashAndDeletedFalse(accNumberHash)
                 .orElseThrow(() -> new RuntimeException("SEMI ODZELEJ"));;
 
         String globalTransactionId = UUID.randomUUID().toString();

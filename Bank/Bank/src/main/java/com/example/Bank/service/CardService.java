@@ -1,5 +1,6 @@
 package com.example.Bank.service;
 
+import com.example.Bank.dto.account.AccountResponse;
 import com.example.Bank.dto.card.CardResponse;
 import com.example.Bank.dto.card.CreateCardRequest;
 import com.example.Bank.model.Account;
@@ -86,7 +87,9 @@ public class CardService {
     /* ================= HELPERS ================= */
 
     private CardResponse mapToResponse(Card card) {
-        return modelMapper.map(card, CardResponse.class);
+        CardResponse response = modelMapper.map(card, CardResponse.class);
+        response.setCardNumber(cryptoService.decrypt(card.getPanEnc()));
+        return response;
     }
 
     public boolean validateLuhn(String pan) {

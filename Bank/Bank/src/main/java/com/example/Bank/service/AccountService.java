@@ -21,10 +21,13 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final CryptoService cryptoService;
 
     public String getMerchantIdFromAccountNumber(String accountNumber) {
+        String accNumberHash = cryptoService.hashDeterministic(accountNumber);
+
         return accountRepository
-                .findByAccountNumberAndDeletedFalse(accountNumber)
+                .findByAccountNumberHashAndDeletedFalse(accNumberHash)
                 .map(Account::getMerchantId)
                 .orElseThrow(() -> new RuntimeException("Account not found for account number: " + accountNumber));
     }
@@ -39,8 +42,11 @@ public class AccountService {
         Account account = accountRepository
                 .findByUserEmailAndDeletedFalse(email)
                 .orElseThrow(() -> new RuntimeException("Account not found for user email: " + email));
+
+        String accNum = cryptoService.decrypt(account.getAccountNumberEnc());
+
         return Map.of(
-                "accountNumber", account.getAccountNumber(),
+                "accountNumber", accNum,
                 "accountHolderName", account.getAccountHolderName()
         );
     }
@@ -72,7 +78,13 @@ public class AccountService {
         Account account = new Account();
         account.setAccountHolderName(user.getName() + " " + user.getSurname());
         account.setMerchantId(request.getMerchantId());
-        account.setAccountNumber(request.getAccountNumber());
+
+        String accNumberHash = cryptoService.hashDeterministic(request.getAccountNumber());
+        String accNumberEnc = cryptoService.encrypt(request.getAccountNumber());
+
+        account.setAccountNumberEnc(accNumberEnc);
+        account.setAccountNumberHash(accNumberHash);
+
         account.setBalance(request.getBalance());
         account.setCurrency(
                 request.getCurrency() != null ? request.getCurrency() : "EUR"
@@ -95,6 +107,7 @@ public class AccountService {
     private AccountResponse mapToResponse(Account account) {
         AccountResponse response = modelMapper.map(account, AccountResponse.class);
         response.setUserId(account.getUser().getId());
+        response.setAccountNumber(cryptoService.decrypt(account.getAccountNumberEnc()));
         return response;
     }
 }

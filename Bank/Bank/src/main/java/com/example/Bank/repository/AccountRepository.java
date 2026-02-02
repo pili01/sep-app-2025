@@ -10,10 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
-    Optional<Account> findByAccountNumber(String accountNumber);
     Optional<Account> findByMerchantId(String merchantId);
 
-    Optional<Account> findByAccountNumberAndDeletedFalse(String accountNumber);
+    Optional<Account> findByAccountNumberHashAndDeletedFalse(String accountNumberHash);
 
     Optional<Account> findByMerchantIdAndDeletedFalse(String merchantId);
 
@@ -23,8 +22,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findAllByDeletedFalse();
 
     Optional<Account> findByIdAndDeletedFalse(Long id);
-
-    Optional<Account> findByUserIdAndDeletedFalse(Long userId);
 
     Optional<Account> findByUserId(Long userId);
 }
