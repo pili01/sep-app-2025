@@ -9,22 +9,14 @@ import java.util.Optional;
 
 @Repository
 public interface CardRepository extends JpaRepository<Card, Long> {
-    Optional<Card> findByCardNumberAndDeletedFalse(String cardNumber);
-    
-    Optional<Card> findByCardNumberAndCvvAndCardholderNameAndExpirationDateAndDeletedFalse(
-        String cardNumber, 
-        String cvv, 
-        String cardholderName, 
-        String expirationDate
-    );
+
+    Optional<Card> findByPanHashAndDeletedFalse(String panHash);
+
+    boolean existsByPanHashAndDeletedFalse(String panHash);
 
     List<Card> findAllByDeletedFalse();
 
-    List<Card> findAllByAccountUserEmailAndDeletedFalse(String email);
-
     Optional<Card> findByIdAndDeletedFalse(Long id);
-
-    boolean existsByCardNumberAndDeletedFalse(String cardNumber);
 
     List<Card> findAllByAccountUserIdAndDeletedFalse(Long userId);
 }

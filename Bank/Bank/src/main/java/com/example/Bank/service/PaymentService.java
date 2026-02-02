@@ -31,6 +31,7 @@ public class PaymentService {
     private final AccountService accountService;
     private final PSPClientService pspClientService;
     private final QrCodeService qrCodeService;
+    private final CryptoService cryptoService;
 
     //test transakcije
     public PaymentTransaction createTestTransaction() {
@@ -82,11 +83,16 @@ public class PaymentService {
         account.setDeleted(false);
         account = accountRepository.save(account);
 
+        String pan = "4111111111111111";
+        String panEnc = cryptoService.encrypt(pan);
+        String cvvEnc = cryptoService.encrypt("123");
+
         Card card = new Card();
-        card.setCardNumber("4111111111111111");
+        card.setPanHash(cryptoService.hashDeterministic(pan));
+        card.setPanEnc(cryptoService.encrypt(panEnc));
         card.setCardholderName("Test User");
         card.setExpirationDate("12/25");
-        card.setCvv("123");
+        card.setCvvEnc(cvvEnc);
         card.setDeleted(false);
         card.setAccount(account);
         cardRepository.save(card);
@@ -147,12 +153,8 @@ public class PaymentService {
             return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, redirectUrl);
         }
 
-        Optional<Card> cardOpt = cardRepository.findByCardNumberAndCvvAndCardholderNameAndExpirationDateAndDeletedFalse(
-                panDigits,
-                request.getSecurityCode(),
-                request.getCardHolderName(),
-                request.getExpirationDate()
-        );
+        String panHash = cryptoService.hashDeterministic(panDigits);
+        Optional<Card> cardOpt = cardRepository.findByPanHashAndDeletedFalse(panHash);
 
         if (cardOpt.isEmpty()) {
             String redirectUrl = getErrorRedirectUrl(transaction);
@@ -160,6 +162,15 @@ public class PaymentService {
         }
 
         Card card = cardOpt.get();
+
+        String decryptedCvv = cryptoService.decrypt(card.getCvvEnc());
+
+        if (!card.getExpirationDate().equals(request.getExpirationDate()) ||
+                !card.getCardholderName().equalsIgnoreCase(request.getCardHolderName()) ||
+                !decryptedCvv.equals(request.getSecurityCode())) {
+            String redirectUrl = getErrorRedirectUrl(transaction);
+            return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, redirectUrl);
+        }
 
         Account account = card.getAccount();
 
@@ -229,8 +240,6 @@ public class PaymentService {
     }
 
 
-
-
     public PaymentProcessResponse processPaymentQR(QrCodeData qrCodeData,String email) {
         String ro = qrCodeData.getRO();
         String transactionId = ro.substring(2);
@@ -283,13 +292,5 @@ public class PaymentService {
 
         return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
     }
-
-
-
-
-
-
-
-
 }
 

@@ -20,6 +20,7 @@ public class CardService {
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
     private final ModelMapper modelMapper;
+    private final CryptoService cryptoService;
 
     /* ================= ADMIN ================= */
 
@@ -29,6 +30,9 @@ public class CardService {
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
         String pan = request.getCardNumber().replaceAll("\\D", "");
+        String panHash = cryptoService.hashDeterministic(pan);
+        String panEnc = cryptoService.encrypt(pan);
+        String cvvEnc = cryptoService.encrypt(request.getCvv());
 
         if (!validateLuhn(pan)) {
             throw new RuntimeException("Invalid card number");
@@ -38,15 +42,16 @@ public class CardService {
             throw new RuntimeException("Invalid expiration date");
         }
 
-        if (cardRepository.existsByCardNumberAndDeletedFalse(pan)) {
+        if (cardRepository.existsByPanHashAndDeletedFalse(panHash)) {
             throw new RuntimeException("Card already exists");
         }
 
         Card card = new Card();
-        card.setCardNumber(pan);
+        card.setPanEnc(panEnc);
+        card.setPanHash(panHash);
         card.setCardholderName(account.getAccountHolderName());
         card.setExpirationDate(request.getExpirationDate());
-        card.setCvv(request.getCvv());
+        card.setCvvEnc(cvvEnc);
         card.setAccount(account);
         card.setDeleted(false);
 
@@ -84,17 +89,34 @@ public class CardService {
         return modelMapper.map(card, CardResponse.class);
     }
 
-
-
     public boolean validateLuhn(String pan) {
-        if (pan == null || pan.isEmpty()) {
+        if (pan == null) {
             return false;
         }
 
         String digits = pan.replaceAll("\\D", "");
-        Card tempCard = new Card();
-        tempCard.setCardNumber(digits);
-        return tempCard.isValid();
+        if (digits.isEmpty()) {
+            return false;
+        }
+
+        int sum = 0;
+        boolean doubleDigit = false;
+
+        for (int i = digits.length() - 1; i >= 0; i--) {
+            int digit = digits.charAt(i) - '0';
+
+            if (doubleDigit) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+
+            sum += digit;
+            doubleDigit = !doubleDigit;
+        }
+
+        return sum % 10 == 0;
     }
     
 
