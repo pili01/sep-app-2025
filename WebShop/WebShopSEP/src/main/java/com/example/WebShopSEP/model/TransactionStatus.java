@@ -1,9 +1,9 @@
 package com.example.WebShopSEP.model;
 
 public enum TransactionStatus {
+    INITIALIZED,
     PENDING,
     COMPLETED,
-    PAID,
     FAILED,
     ERROR,
     CANCELLED

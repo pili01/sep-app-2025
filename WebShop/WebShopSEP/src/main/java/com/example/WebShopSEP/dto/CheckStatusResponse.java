@@ -1,5 +1,6 @@
 package com.example.WebShopSEP.dto;
 
+import com.example.WebShopSEP.model.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,4 +14,5 @@ public class CheckStatusResponse {
     private Boolean verified;
     private String paymentMethodName;
     private String message;
+    private TransactionStatus transactionStatus;
 }

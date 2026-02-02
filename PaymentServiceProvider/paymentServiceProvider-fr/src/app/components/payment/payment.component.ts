@@ -45,7 +45,7 @@ export class PaymentComponent implements OnInit {
     this.isLoading.set(true);
     this.merchantService.getSubscriptions(this.merchantId).subscribe({
       next: (response) => {
-        this.paymentMethods.set(response);
+        this.paymentMethods.set(response.filter((sub) => sub.enabled));
         this.isLoading.set(false);
       },
       error: (error) => {

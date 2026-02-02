@@ -3,6 +3,7 @@ package com.example.WebShopSEP.controller;
 import com.example.WebShopSEP.dto.CheckStatusRequest;
 import com.example.WebShopSEP.dto.CheckStatusResponse;
 import com.example.WebShopSEP.dto.WebhookPaymentRequest;
+import com.example.WebShopSEP.model.TransactionStatus;
 import com.example.WebShopSEP.service.WebhookVerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,28 +35,6 @@ public class WebhookController {
             log.error("Failed to process webhook notification for transaction {}: {}",
                     request.getTransactionId(), e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @PostMapping("/check-status")
-    public ResponseEntity<CheckStatusResponse> checkStatus(@RequestBody CheckStatusRequest request) {
-        log.info("Received check-status request for transaction: {}", request.getTransactionId());
-
-        try {
-            CheckStatusResponse response = webhookVerificationService.verifyPaymentStatus(request);
-            log.info("Check-status response: verified={}, status={}",
-                    response.getVerified(), response.getStatus());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Failed to process check-status request for transaction {}: {}",
-                    request.getTransactionId(), e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body(new CheckStatusResponse(
-                            request.getTransactionId(),
-                            "ERROR",
-                            false,
-                            "",
-                            "Check-status failed: " + e.getMessage()));
         }
     }
 }

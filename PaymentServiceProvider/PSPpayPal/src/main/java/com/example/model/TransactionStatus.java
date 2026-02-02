@@ -1,10 +1,10 @@
 package com.example.model;
 
 public enum TransactionStatus {
+    INITIALIZED,
     PENDING,
-    PROCESSING,
     COMPLETED,
     FAILED,
-    CANCELLED,
-    ERROR
+    ERROR,
+    CANCELLED
 }

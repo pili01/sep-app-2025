@@ -25,54 +25,6 @@ public class WebhookVerificationService {
     private final ConfigProperties config;
 
     @Transactional
-    public CheckStatusResponse verifyPaymentStatus(CheckStatusRequest request) {
-        log.info("Verifying payment status for transaction: {}", request.getTransactionId());
-
-        try {
-            // 1. Pronađi transakciju u bazi
-            Transaction transaction = transactionRepository.findByTransactionId(request.getTransactionId())
-                    .orElseThrow(() -> {
-                        log.error("Transaction not found: {}", request.getTransactionId());
-                        return new RuntimeException("Transaction not found: " + request.getTransactionId());
-                    });
-
-            // 2. Proveri da li se amount i currency poklapaju
-            boolean amountMatch = transaction.getTimestamp() != null; // Koristimo timestamp kao proxy za validnost
-
-            if (!amountMatch) {
-                log.error("Transaction validation failed for: {}", request.getTransactionId());
-                return new CheckStatusResponse(
-                        request.getTransactionId(),
-                        transaction.getStatus().toString(),
-                        false,
-                        "",
-                        "Transaction validation failed");
-            }
-
-            // 3. Označi da je PSP proverio status (merchantNotified se šalje iz PSP-a)
-            log.info("Transaction {} verified successfully. Current status: {}",
-                    request.getTransactionId(), transaction.getStatus());
-
-            return new CheckStatusResponse(
-                    request.getTransactionId(),
-                    transaction.getStatus().toString(),
-                    true,
-                    "",
-                    "Verification successful");
-
-        } catch (Exception e) {
-            log.error("Error verifying payment status for transaction {}: {}",
-                    request.getTransactionId(), e.getMessage(), e);
-            return new CheckStatusResponse(
-                    request.getTransactionId(),
-                    "ERROR",
-                    false,
-                    "",
-                    "Verification error: " + e.getMessage());
-        }
-    }
-
-    @Transactional
     public void updateTransactionFromWebhook(String transactionId) {
         log.info("Processing webhook notification for transaction: {}", transactionId);
 
@@ -115,13 +67,13 @@ public class WebhookVerificationService {
                 log.info("Payment method set to: {}", verificationResponse.getPaymentMethodName());
             }
 
-            transaction.setStatus(TransactionStatus.COMPLETED);
+            transaction.setStatus(verificationResponse.getTransactionStatus());
             transactionRepository.save(transaction);
             log.info("Transaction {} status updated to COMPLETED with payment method", transactionId);
 
             // 5. Pronađi rental koji je vezan za transakciju i updateja njegov status na
             // PURCHASED
-            if (transaction.getRentalId() != null) {
+            if (transaction.getRentalId() != null && transaction.getStatus() == TransactionStatus.COMPLETED) {
                 updateRentalStatus(transaction.getRentalId(), RentalStatus.PURCHASED, transaction.getPaymentMethod());
             }
 

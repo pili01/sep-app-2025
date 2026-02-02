@@ -1,7 +1,6 @@
 package com.example.PaymentServiceProviderSEP.service;
 
 import com.example.PaymentServiceProviderSEP.dto.CheckStatusRequest;
-import com.example.PaymentServiceProviderSEP.dto.CheckStatusResponse;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
 import com.example.PaymentServiceProviderSEP.model.Transaction;
 import com.example.PaymentServiceProviderSEP.model.TransactionStatus;
@@ -10,8 +9,6 @@ import com.example.PaymentServiceProviderSEP.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +20,6 @@ public class WebhookVerificationService {
     private final HttpsClientService httpsClientService;
     private final MerchantWebhookService merchantWebhookService;
 
-    @Transactional
     public void verifyAndUpdateTransaction(String transactionId) {
         log.info("Verifying transaction from webhook: {}", transactionId);
 
@@ -63,6 +59,7 @@ public class WebhookVerificationService {
                 log.error("Received null response from check-status endpoint");
                 transaction.setStatus(TransactionStatus.ERROR);
                 transactionRepository.save(transaction);
+                merchantWebhookService.notifyMerchant(transaction);
                 return;
             }
 
@@ -88,6 +85,7 @@ public class WebhookVerificationService {
             log.error("Failed to verify transaction {}: {}", transactionId, e.getMessage(), e);
             transaction.setStatus(TransactionStatus.ERROR);
             transactionRepository.save(transaction);
+            merchantWebhookService.notifyMerchant(transaction);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.example.PaymentServiceProviderSEP.controller;
 import com.example.PaymentServiceProviderSEP.dto.CheckStatusRequest;
 import com.example.PaymentServiceProviderSEP.dto.CheckStatusResponse;
 import com.example.PaymentServiceProviderSEP.dto.WebhookPaymentRequest;
+import com.example.PaymentServiceProviderSEP.model.TransactionStatus;
 import com.example.PaymentServiceProviderSEP.service.MerchantVerificationService;
 import com.example.PaymentServiceProviderSEP.service.WebhookVerificationService;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,8 @@ public class WebhookController {
                             "ERROR",
                             false,
                             null,
-                            "Check-status failed: " + e.getMessage()));
+                            "Check-status failed: " + e.getMessage(),
+                            TransactionStatus.ERROR));
         }
     }
 }

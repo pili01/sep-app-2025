@@ -13,6 +13,7 @@ import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.example.PaymentServiceProviderSEP.config.ConfigProperties;
@@ -61,6 +62,7 @@ public class MerchantWebhookService {
         return restClient;
     }
 
+    @Async
     public void notifyMerchant(Transaction transaction) {
         try {
             log.info("Sending webhook notification to merchant for transaction: {}", transaction.getTransactionId());

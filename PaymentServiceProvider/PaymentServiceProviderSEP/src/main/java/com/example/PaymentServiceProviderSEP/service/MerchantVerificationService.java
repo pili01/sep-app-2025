@@ -2,14 +2,13 @@ package com.example.PaymentServiceProviderSEP.service;
 
 import com.example.PaymentServiceProviderSEP.dto.CheckStatusRequest;
 import com.example.PaymentServiceProviderSEP.dto.CheckStatusResponse;
-import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
 import com.example.PaymentServiceProviderSEP.model.Transaction;
+import com.example.PaymentServiceProviderSEP.model.TransactionStatus;
 import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import com.example.PaymentServiceProviderSEP.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +18,6 @@ public class MerchantVerificationService {
     private final TransactionRepository transactionRepository;
     private final PaymentMethodRepository paymentMethodRepository;
 
-    @Transactional
     public CheckStatusResponse verifyMerchantCheckStatus(CheckStatusRequest request) {
         log.info("Verifying merchant check-status for transaction: {}", request.getTransactionId());
 
@@ -44,7 +42,8 @@ public class MerchantVerificationService {
                     transaction.getStatus().toString(),
                     true,
                     paymentMethod.get().getName(),
-                    "Verification successful");
+                    "Verification successful",
+                    transaction.getStatus());
 
         } catch (Exception e) {
             log.error("Error verifying merchant check-status for transaction {}: {}",
@@ -54,7 +53,8 @@ public class MerchantVerificationService {
                     "ERROR",
                     false,
                     null,
-                    "Verification error: " + e.getMessage());
+                    "Verification error: " + e.getMessage(),
+                    TransactionStatus.ERROR);
         }
     }
 }
