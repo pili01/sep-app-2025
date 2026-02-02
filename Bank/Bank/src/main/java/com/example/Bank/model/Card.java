@@ -21,7 +21,10 @@ public class Card {
     private boolean deleted = false;
 
     @Column(unique = true, nullable = false)
-    private String cardNumber;
+    private String panEnc;
+
+    @Column(unique = true, nullable = false)
+    private String panHash;
 
     @Column(nullable = false)
     private String cardholderName;
@@ -30,36 +33,9 @@ public class Card {
     private String expirationDate;
 
     @Column(nullable = false)
-    private String cvv;
+    private String cvvEnc;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Account account;
-
-
-    public boolean isValid() {
-        if (cardNumber == null || !cardNumber.matches("\\d+")) {
-            return false;
-        }
-
-        int sum = 0;
-        boolean doubleDigit = false;
-
-        for (int i = cardNumber.length() - 1; i >= 0; i--) {
-            int digit = cardNumber.charAt(i) - '0';
-
-            if (doubleDigit) {
-                digit *= 2;
-                if (digit > 9) {
-                    digit -= 9;
-                }
-            }
-
-            sum += digit;
-            doubleDigit = !doubleDigit;
-        }
-
-        return sum % 10 == 0;
-    }
-
 }

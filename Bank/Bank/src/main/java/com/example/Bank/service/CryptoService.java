@@ -115,6 +115,16 @@ public class CryptoService {
         }
     }
 
+    public String hashDeterministic(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException("Hashing failed", e);
+        }
+    }
+
     private byte[] pbkdf2(char[] password, byte[] salt) throws Exception {
         KeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(HASH_ALGORITHM);

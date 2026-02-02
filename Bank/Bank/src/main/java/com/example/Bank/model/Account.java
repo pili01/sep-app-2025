@@ -32,8 +32,11 @@ public class Account {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @Column(unique = true, nullable = false)
-    private String accountNumber;
+    @Column(nullable = false)
+    private String accountNumberEnc;
+
+    @Column(nullable = false)
+    private String accountNumberHash;
 
     @Column(nullable = false)
     private double balance;

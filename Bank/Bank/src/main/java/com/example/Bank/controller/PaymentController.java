@@ -2,7 +2,10 @@ package com.example.Bank.controller;
 
 import com.example.Bank.config.ConfigProperties;
 import com.example.Bank.dto.*;
-import com.example.Bank.service.AccountService;
+import com.example.Bank.dto.payment.CreatePaymentRequest;
+import com.example.Bank.dto.payment.PaymentDetailsResponse;
+import com.example.Bank.dto.payment.PaymentProcessRequest;
+import com.example.Bank.dto.payment.PaymentProcessResponse;
 import com.example.Bank.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
