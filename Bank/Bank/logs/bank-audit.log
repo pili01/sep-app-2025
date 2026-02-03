@@ -1,2 +1,0 @@
-2026-02-03 11:14:57.097 [https-jsse-nio-8443-exec-7] [req=8f0f1c] [user=3] [ip=0:0:0:0:0:0:0:1] INFO  bank AUDIT - Izvrsen get all accounts
-2026-02-03 11:34:58.186 [req=7212d9] [user=3] [ip=0:0:0:0:0:0:0:1] [hash=5ad05610a224418b25620608922244e9e6558fcefbe18d79c330116d7bd834b6] INFO  AUDIT AUDIT - Izvrsen get all accounts
