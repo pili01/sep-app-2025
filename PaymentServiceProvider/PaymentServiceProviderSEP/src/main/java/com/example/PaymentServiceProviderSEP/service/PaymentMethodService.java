@@ -1,5 +1,6 @@
 package com.example.PaymentServiceProviderSEP.service;
 
+import com.example.PaymentServiceProviderSEP.controller.PaymentMethodController;
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodConnectRequest;
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodDTO;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
@@ -8,6 +9,8 @@ import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +29,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PaymentMethodService {
 
     private final PaymentMethodRepository paymentMethodRepository;
     private final SecureRestClientFactory restClientFactory;
+    private static final Logger log = LoggerFactory.getLogger(PaymentMethodService.class);
 
     @Value("${app.upload.dir:uploads/payment-method-icons}")
     private String uploadDir;
@@ -53,15 +56,21 @@ public class PaymentMethodService {
 
     @Transactional
     public void heartbeatRoundRobin() {
+        log.debug("Starting heartbeat round-robin");
 
         paymentMethodRepository.findNextForHeartbeat(PaymentMethodCode.CUSTOM)
-                .ifPresent(this::heartbeat);
+                .ifPresent(method -> {
+                    log.info("Selected payment method {} for heartbeat", method.getId());
+                    heartbeat(method);
+                });
+
+        log.debug("Completed heartbeat round-robin");
     }
 
     private void heartbeat(PaymentMethod method) {
         var client = restClientFactory.create(method.getHostname());
-
         method.setLastHeartbeat(LocalDateTime.now());
+        log.info("Sending heartbeat request to payment method id={} at {}", method.getId(), method.getHostname());
 
         try {
             client.get()
@@ -70,12 +79,14 @@ public class PaymentMethodService {
                     .toBodilessEntity();
 
             method.setActive(true);
-
+            log.info("Heartbeat successful for payment method id={}", method.getId());
         } catch (Exception e) {
             method.setActive(false);
+            log.warn("Heartbeat failed for payment method id={} at {}: {}", method.getId(), method.getHostname(), e.getMessage());
         }
 
         paymentMethodRepository.save(method);
+        log.debug("Saved heartbeat status for payment method id={}, active={}", method.getId(), method.isActive());
     }
 
     @Transactional
@@ -268,43 +279,4 @@ public class PaymentMethodService {
             this.message = message;
         }
     }
-
-    // deprecated povezivanje microservisa
-//    @Transactional
-//    public void connect(PaymentMethodConnectRequest request) {
-//
-//        PaymentMethod paymentMethod = paymentMethodRepository
-//                .findByName(request.getName())
-//                .orElseGet(() -> {
-//                    PaymentMethod pm = new PaymentMethod();
-//                    pm.setName(request.getName());
-//                    pm.setCheckIndex(0L);
-//                    return pm;
-//                });
-//
-//        paymentMethod.setLastHeartbeat(LocalDateTime.now());
-//        paymentMethod.setEnabled(request.getEnabled());
-//        paymentMethod.setActive(false);
-//
-//        if (!request.getHostname().equals(paymentMethod.getHostname())) {
-//            paymentMethod.setHostname(request.getHostname());
-//        }
-//
-//        if (!request.getStatusUrl().equals(paymentMethod.getHealthEndpoint())) {
-//            paymentMethod.setHealthEndpoint(request.getStatusUrl());
-//        }
-//
-//        if (!request.getPaymentUrl().equals(paymentMethod.getPaymentEndpoint())) {
-//            paymentMethod.setPaymentEndpoint(request.getPaymentUrl());
-//        }
-//
-//        PaymentMethodCode resolvedCode = resolvePaymentMethodCode(request.getPaymentMethodCode());
-//
-//        if (resolvedCode != paymentMethod.getPaymentMethodCode()) {
-//            paymentMethod.setPaymentMethodCode(resolvedCode);
-//        }
-//
-//        paymentMethodRepository.save(paymentMethod);
-//    }
-
 }
