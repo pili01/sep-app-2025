@@ -7,6 +7,8 @@ import com.example.Bank.jwt.JwtService;
 import com.example.Bank.model.User;
 import com.example.Bank.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
+
+    private static final Logger securityLog = LoggerFactory.getLogger("SECURITY");
 
     public AuthController(UserService userService, JwtService jwtService) {
         this.userService = userService;
@@ -43,6 +47,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO request, HttpServletRequest httpRequest) {
+        securityLog.warn("Pokusaj prijavljivanja korisinka");
+
         User user = userService.authenticate(request.getEmail(), request.getPassword())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 

@@ -1,4 +1,4 @@
-package com.example.Bank.service;
+package com.example.Bank.util;
 
 import com.example.Bank.config.ConfigProperties;
 import lombok.Getter;

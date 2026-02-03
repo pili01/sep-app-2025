@@ -10,6 +10,7 @@ import com.example.Bank.model.PaymentTransaction;
 import com.example.Bank.repository.AccountRepository;
 import com.example.Bank.repository.CardRepository;
 import com.example.Bank.repository.PaymentTransactionRepository;
+import com.example.Bank.util.CryptoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
