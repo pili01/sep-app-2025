@@ -4,6 +4,7 @@ import com.example.Bank.dto.user.RegisterDTO;
 import com.example.Bank.model.User;
 import com.example.Bank.model.UserRole;
 import com.example.Bank.repository.UserRepository;
+import com.example.Bank.util.CryptoService;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

@@ -6,6 +6,7 @@ import com.example.Bank.model.Account;
 import com.example.Bank.model.User;
 import com.example.Bank.repository.AccountRepository;
 import com.example.Bank.repository.UserRepository;
+import com.example.Bank.util.CryptoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

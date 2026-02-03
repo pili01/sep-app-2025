@@ -1,5 +1,6 @@
 package com.example.Bank.service;
 
+import com.example.Bank.controller.PaymentController;
 import com.example.Bank.dto.payment.PaymentDetailsResponse;
 import com.example.Bank.dto.payment.PaymentProcessRequest;
 import com.example.Bank.dto.payment.PaymentProcessResponse;
@@ -10,8 +11,12 @@ import com.example.Bank.model.PaymentTransaction;
 import com.example.Bank.repository.AccountRepository;
 import com.example.Bank.repository.CardRepository;
 import com.example.Bank.repository.PaymentTransactionRepository;
+import com.example.Bank.util.AuditLogger;
+import com.example.Bank.util.CryptoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,6 +37,9 @@ public class PaymentService {
     private final PSPClientService pspClientService;
     private final QrCodeService qrCodeService;
     private final CryptoService cryptoService;
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private final AuditLogger audit;
 
     //test transakcije
     public PaymentTransaction createTestTransaction() {
@@ -138,28 +146,47 @@ public class PaymentService {
 
 
     public PaymentProcessResponse processPayment(String paymentId, PaymentProcessRequest request) {
+        log.info("Processing payment: paymentId={}, panHash={}", paymentId, cryptoService.hashDeterministic(request.getPan().replaceAll("\\D", "")));
+
         PaymentTransaction transaction = paymentTransactionRepository
                 .findByPaymentId(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> {
+                    String msg = "Payment not found: " + paymentId;
+                    audit.info(msg);
+                    log.warn(msg);
+                    return new RuntimeException(msg);
+                });
 
         if (LocalDateTime.now().isAfter(transaction.getExpiresAt())) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Payment session expired: transactionId=" + transaction.getId();
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Payment session has expired", null, null, redirectUrl);
         }
 
         if (transaction.getUsed()) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Payment already processed: transactionId=" + transaction.getId();
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Payment has already been processed", null, null, redirectUrl);
         }
 
         String panDigits = request.getPan().replaceAll("\\D", "");
         if (!cardService.validateLuhn(panDigits)) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Invalid card number attempt: transactionId=" + transaction.getId();
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Invalid card number", null, null, redirectUrl);
         }
 
         if (!cardService.validateExpirationDate(request.getExpirationDate())) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Invalid or expired card date: transactionId=" + transaction.getId();
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Invalid or expired card expiration date", null, null, redirectUrl);
         }
 
@@ -168,6 +195,9 @@ public class PaymentService {
 
         if (cardOpt.isEmpty()) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Card not found or invalid details: panHash=" + panHash;
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, redirectUrl);
         }
 
@@ -179,6 +209,9 @@ public class PaymentService {
                 !card.getCardholderName().equalsIgnoreCase(request.getCardHolderName()) ||
                 !decryptedCvv.equals(request.getSecurityCode())) {
             String redirectUrl = getErrorRedirectUrl(transaction);
+            String msg = "Card validation failed for transactionId=" + transaction.getId() + "panHash=" + card.getPanHash();
+            audit.info(msg);
+            log.warn(msg);
             return new PaymentProcessResponse(false, "Card not found or invalid card details", null, null, redirectUrl);
         }
 
@@ -200,20 +233,48 @@ public class PaymentService {
                     "FAILED"
             ).orElse(null);
 
+            String msg = "Payment failed due to insufficient funds: transactionId=" + transaction.getId() + ", accountId=" + account.getId();
+            audit.info(msg);
+            log.info(msg);
+
             return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
         }
 
         // SUCCESS slučaj - dovoljno sredstava
         // Oduzimam sredstva sa kartice korisnika
-        account.setBalance(account.getBalance() - transaction.getAmount());
+        double oldBalance = account.getBalance();
+        account.setBalance(oldBalance - transaction.getAmount());
         accountRepository.save(account);
+
+        String debitMsg = String.format(
+                "Debit: transactionId=%s, fromAccountHash=%s, amount=%s, oldBalance=%s, newBalance=%s",
+                transaction.getId(),
+                account.getAccountNumberHash(),
+                transaction.getAmount(),
+                oldBalance,
+                account.getBalance()
+        );
+        audit.info(debitMsg);
+        log.info(debitMsg);
 
         // Prebacujem sredstva na merchant account
         Optional<Account> merchantAccountOpt = accountRepository.findByMerchantId(transaction.getMerchantId());
         if (merchantAccountOpt.isPresent()) {
             Account merchantAccount = merchantAccountOpt.get();
-            merchantAccount.setBalance(merchantAccount.getBalance() + transaction.getAmount());
+            double merchantOldBalance = merchantAccount.getBalance();
+            merchantAccount.setBalance(merchantOldBalance + transaction.getAmount());
             accountRepository.save(merchantAccount);
+
+            String creditMsg = String.format(
+                    "Credit: transactionId=%s, toAccountHash=%s, amount=%s, oldBalance=%s, newBalance=%s",
+                    transaction.getId(),
+                    merchantAccount.getAccountNumberHash(),
+                    transaction.getAmount(),
+                    merchantOldBalance,
+                    merchantAccount.getBalance()
+            );
+            audit.info(creditMsg);
+            log.info(creditMsg);
         }
 
         paymentTransactionRepository.save(transaction);
@@ -225,6 +286,11 @@ public class PaymentService {
                 acquirerTimestamp,
                 "SUCCESS"
         ).orElse(null);
+
+        String msg = "Payment processed successfully: transactionId=" + transaction.getId() +
+                ", globalTransactionId=" + globalTransactionId + ", amount=" + transaction.getAmount();
+        audit.info(msg);
+        log.info(msg);
 
         return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
     }
@@ -264,13 +330,21 @@ public class PaymentService {
         String accNumberHash =  cryptoService.hashDeterministic(accountNumber);
 
         Account toAccount=accountRepository.findByAccountNumberHashAndDeletedFalse(accNumberHash)
-                .orElseThrow(() -> new RuntimeException("SEMI ODZELEJ"));;
+                .orElseThrow(() -> new RuntimeException("Recipient account not found"));;
 
         String globalTransactionId = UUID.randomUUID().toString();
         LocalDateTime acquirerTimestamp = LocalDateTime.now();
         transaction.setGlobalTransactionId(globalTransactionId);
         transaction.setAcquirerTimestamp(acquirerTimestamp);
-        if(fromAccount==null || toAccount==null) {throw new RuntimeException("qofcwdvnwfv");}
+
+        if(fromAccount==null || toAccount==null)
+            {throw new RuntimeException("Accounts not found");}
+
+        log.info("Processing QR transaction: transactionId={}, fromAccountHash={}, toAccountHash={}, amount={}",
+                transaction.getId(),
+                fromAccount.getAccountNumberHash(),
+                toAccount.getAccountNumberHash(),
+                transaction.getAmount());
 
         if (fromAccount.getBalance() < transaction.getAmount()) {
             paymentTransactionRepository.save(transaction);
@@ -282,16 +356,48 @@ public class PaymentService {
                     "FAILED"
             ).orElse(null);
 
+            log.warn("Transaction FAILED due to insufficient funds: transactionId={}, fromAccountHash={}, amount={} {}",
+                    transaction.getId(),
+                    fromAccount.getAccountNumberHash(),
+                    transaction.getAmount(),
+                    transaction.getCurrency());
+
             return new PaymentProcessResponse(false, "Insufficient funds", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
         }
 
         // SUCCESS slučaj - dovoljno sredstava
         // Oduzimam sredstva sa kartice korisnika
-        fromAccount.setBalance(fromAccount.getBalance() - transaction.getAmount());
+        double fromOldBalance = fromAccount.getBalance();
+        fromAccount.setBalance(fromOldBalance - transaction.getAmount());
         accountRepository.save(fromAccount);
 
-        toAccount.setBalance(toAccount.getBalance() + transaction.getAmount());
+        double toOldBalance = toAccount.getBalance();
+        toAccount.setBalance(toOldBalance + transaction.getAmount());
         accountRepository.save(toAccount);
+
+        // Audit logs
+        String debitMsg = String.format(
+                "Debit: transactionId=%s, fromAccountHash=%s, amount=%s, oldBalance=%s, newBalance=%s",
+                transaction.getId(),
+                fromAccount.getAccountNumberHash(),
+                transaction.getAmount(),
+                fromOldBalance,
+                fromAccount.getBalance()
+        );
+        audit.info(debitMsg);
+        log.info(debitMsg);
+
+        String creditMsg = String.format(
+                "Credit: transactionId=%s, toAccountHash=%s, amount=%s, oldBalance=%s, newBalance=%s",
+                transaction.getId(),
+                toAccount.getAccountNumberHash(),
+                transaction.getAmount(),
+                toOldBalance,
+                toAccount.getBalance()
+        );
+        audit.info(creditMsg);
+        log.info(creditMsg);
+
 
         paymentTransactionRepository.save(transaction);
 
@@ -302,6 +408,12 @@ public class PaymentService {
                 acquirerTimestamp,
                 "SUCCESS"
         ).orElse(null);
+
+        log.info("Transaction SUCCESS: transactionId={}, fromAccountHash={}, toAccountHash={}, amount={}",
+                transaction.getId(),
+                fromAccount.getAccountNumberHash(),
+                toAccount.getAccountNumberHash(),
+                transaction.getAmount());
 
         return new PaymentProcessResponse(true, "Payment processed successfully", globalTransactionId, acquirerTimestamp.toString(), redirectUrl);
     }

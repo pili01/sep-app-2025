@@ -7,8 +7,11 @@ import com.example.Bank.dto.payment.PaymentDetailsResponse;
 import com.example.Bank.dto.payment.PaymentProcessRequest;
 import com.example.Bank.dto.payment.PaymentProcessResponse;
 import com.example.Bank.service.PaymentService;
+import com.example.Bank.util.AuditLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +27,9 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final ConfigProperties configProperties;
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
+    private final AuditLogger audit;
 
     @GetMapping("/test/create")
     @PostMapping("/test/create")
@@ -51,6 +57,19 @@ public class PaymentController {
                     request.getMerchantId(),
                     request.getSTAN()
             );
+
+            String msg = String.format(
+                    "Transaction created: id=%d, amount=%.2f, currency=%s, merchantId=%s, STAN=%s",
+                    transaction.getId(),
+                    transaction.getAmount(),
+                    transaction.getCurrency(),
+                    transaction.getMerchantId(),
+                    transaction.getStan()
+                    );
+
+            log.info("Transaction created: {}", transaction);
+            audit.info(msg);
+
             String paymentUrl = configProperties.getFrontendBaseUrl() + "/payment/" + transaction.getPaymentId();
             return ResponseEntity.ok(Map.of("paymentId", transaction.getPaymentId(), "paymentUrl", paymentUrl));
         } catch (Exception e) {
@@ -74,11 +93,15 @@ public class PaymentController {
             @PathVariable String paymentId,
             @Valid @RequestBody PaymentProcessRequest request) {
 
+        log.info("Process card payment request");
+
         PaymentProcessResponse response = paymentService.processPayment(paymentId, request);
 
         if (response.getSuccess()) {
+            log.info("Process payment successful");
             return ResponseEntity.ok(response);
         } else {
+            log.info("Process payment failed");
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -88,16 +111,13 @@ public class PaymentController {
     public ResponseEntity<PaymentProcessResponse> processPayment(
              @RequestBody QrCodeData request) {
 
-
+        log.info("Process qr code payment request");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth != null ? auth.getName() : "unknown";
 
-        PaymentProcessResponse response = paymentService.processPaymentQR(request,email);
+        PaymentProcessResponse response = paymentService.processPaymentQR(request, email);
 
-            return ResponseEntity.ok(response);
-        
+        return ResponseEntity.ok(response);
     }
-
-
 }
 

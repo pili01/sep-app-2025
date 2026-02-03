@@ -34,3 +34,7 @@ build/
 
 ### configuracija
 secrets.properties
+
+# Logs
+logs/
+*.log
