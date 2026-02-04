@@ -18,52 +18,39 @@ public class WebhookSchedulerService {
     private final TransactionRepository transactionRepository;
     private final WebhookService webhookService;
 
-    /**
-     * Svakih 5 minuta šalje webhook za sve transakcije koje su COMPLETED
-     * ali još nisu notifikovane od strane PSP
-     */
-    @Scheduled(fixedRate = 1000 * 60 * 5) // 5 minuta = 300000 ms
-    public void sendPendingWebhooks() {
-        log.info("Starting scheduled webhook notification check");
+     //Svakih 5 minuta šalje webhook za sve transakcije koje su COMPLETED ali još nisu notifikovane od strane PSP
 
+    @Scheduled(fixedRate = 1000 * 60 * 5)
+    public void sendPendingWebhooks() {
         try {
             // Pronađi sve transakcije koje su COMPLETED ali nemaju pspNotified = true
             List<Transaction> completedTransactions = transactionRepository
                     .findByStatusAndPspNotified(TransactionStatus.COMPLETED, false);
 
             if (completedTransactions.isEmpty()) {
-                log.debug("No completed transactions to notify");
                 return;
             }
 
-            log.info("Found {} completed transactions to notify", completedTransactions.size());
-
             for (Transaction transaction : completedTransactions) {
                 try {
-                    log.info("Sending webhook notification for transaction: {}", transaction.getPspTransactionId());
                     webhookService.notifyPaymentCompleted(transaction);
                 } catch (Exception e) {
                     log.error("Failed to send webhook for transaction: {}", transaction.getPspTransactionId(), e);
-                    // Nastavi sa sledećom transakcijom
+
                 }
             }
 
-            log.info("Completed scheduled webhook notification check");
 
-            // Pronađi sve transakcije koje su FAILED ali nemaju pspNotified = true
             List<Transaction> failedTransactions = transactionRepository
                     .findByStatusAndPspNotified(TransactionStatus.FAILED, false);
 
             if (failedTransactions.isEmpty()) {
-                log.debug("No failed transactions to notify");
                 return;
             }
 
-            log.info("Found {} failed transactions to notify", failedTransactions.size());
 
             for (Transaction transaction : failedTransactions) {
                 try {
-                    log.info("Sending webhook notification for transaction: {}", transaction.getPspTransactionId());
                     webhookService.notifyPaymentFailed(transaction);
                 } catch (Exception e) {
                     log.error("Failed to send webhook for transaction: {}", transaction.getPspTransactionId(), e);
@@ -75,15 +62,12 @@ public class WebhookSchedulerService {
                     .findByStatusAndPspNotified(TransactionStatus.ERROR, false);
 
             if (errorTransactions.isEmpty()) {
-                log.debug("No error transactions to notify");
                 return;
             }
 
-            log.info("Found {} error transactions to notify", errorTransactions.size());
 
             for (Transaction transaction : errorTransactions) {
                 try {
-                    log.info("Sending webhook notification for transaction: {}", transaction.getPspTransactionId());
                     webhookService.notifyPaymentError(transaction);
                 } catch (Exception e) {
                     log.error("Failed to send webhook for transaction: {}", transaction.getPspTransactionId(), e);

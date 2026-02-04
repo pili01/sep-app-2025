@@ -14,9 +14,9 @@ import java.math.BigDecimal;
 public class CheckStatusResponse {
     private String transactionId;
     private String status; // COMPLETED, FAILED, ERROR, PENDING
-    private Boolean verified; // true if amount, currency match
+    private Boolean verified;
     private BigDecimal amount;
     private String currency;
     private String message;
-    private String paymentMethodName; // Added for WebShop verification (e.g., "Crypto", "Bitcoin")
+    private String paymentMethodName;
 }

@@ -6,42 +6,38 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * DTO za BlockCypher Transaction objekat
- */
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockCypherTransaction {
     @JsonProperty("hash")
-    private String hash; // Transaction hash
+    private String hash;
     
     @JsonProperty("block_height")
-    private Integer blockHeight; // Block height (null ako nije potvrđen)
+    private Integer blockHeight;
     
     @JsonProperty("confirmations")
-    private Integer confirmations; // Broj potvrda
+    private Integer confirmations;
     
     @JsonProperty("confirmed")
-    private String confirmed; // ISO 8601 timestamp kada je potvrđen
+    private String confirmed;
     
     @JsonProperty("received")
-    private String received; // ISO 8601 timestamp kada je primljen
+    private String received;
     
     @JsonProperty("total")
-    private Long total; // Ukupan iznos u satoshima
+    private Long total;
     
     @JsonProperty("fees")
-    private Long fees; // Transaction fees u satoshima
+    private Long fees;
     
     @JsonProperty("inputs")
-    private List<BlockCypherInput> inputs; // Input transakcije
+    private List<BlockCypherInput> inputs; // input transakcije
     
     @JsonProperty("outputs")
-    private List<BlockCypherOutput> outputs; // Output transakcije
+    private List<BlockCypherOutput> outputs; // output transakcije
     
-    /**
-     * Konvertuje total iz satoshi u BTC
-     */
+
     public BigDecimal getTotalInBTC() {
         if (total == null) {
             return BigDecimal.ZERO;

@@ -16,6 +16,9 @@ interface CryptoPaymentData {
   createdAt: string;
   completedAt: string | null;
   errorMessage: string | null;
+  successUrl: string | null;
+  failedUrl: string | null;
+  errorUrl: string | null;
 }
 
 @Component({
@@ -71,9 +74,13 @@ export class CryptoPaymentComponent implements OnInit, OnDestroy {
         this.paymentData.set(data);
         this.isLoading.set(false);
 
-        // Ako je payment COMPLETED, preusmeri korisnika na success URL
+        // Ako je payment završen, preusmeri korisnika na odgovarajući URL
         if (data.status === 'COMPLETED' && data.completedAt) {
           this.handlePaymentCompleted();
+        } else if (data.status === 'FAILED') {
+          this.handlePaymentFailed();
+        } else if (data.status === 'ERROR') {
+          this.handlePaymentError();
         }
       },
       error: (err) => {
@@ -105,9 +112,13 @@ export class CryptoPaymentComponent implements OnInit, OnDestroy {
               currentData.confirmations !== data.confirmations) {
             this.paymentData.set(data);
             
-            // Ako je payment COMPLETED, preusmeri korisnika
+            // Ako je payment završen, preusmeri korisnika na odgovarajući URL
             if (data.status === 'COMPLETED' && data.completedAt) {
               this.handlePaymentCompleted();
+            } else if (data.status === 'FAILED') {
+              this.handlePaymentFailed();
+            } else if (data.status === 'ERROR') {
+              this.handlePaymentError();
             }
           }
         },
@@ -135,18 +146,45 @@ export class CryptoPaymentComponent implements OnInit, OnDestroy {
     this.stopPolling(); // Zaustavi polling
     
     const paymentData = this.paymentData();
-    if (paymentData) {
-      // Uzmi success URL iz payment podataka (može biti u response-u ili iz PSP-a)
-      // Za sada, preusmeri na WebShop success stranicu
-      // TODO: Dobiti success URL iz PSP-a ili iz payment podataka
-      
-      // Možeš dodati delay pre preusmeravanja da korisnik vidi "Payment Completed" poruku
+    if (paymentData && paymentData.successUrl) {
+      // Delay pre preusmeravanja da korisnik vidi "Payment Completed" poruku
       setTimeout(() => {
-        // Preusmeri na success stranicu
-        // window.location.href = paymentData.successUrl; // Ako imaš success URL
-        // Ili jednostavno prikaži poruku
-        alert('Plaćanje je uspešno završeno!');
+        window.location.href = paymentData.successUrl!;
       }, 2000);
+    } else {
+      console.warn('Success URL not available, cannot redirect');
+    }
+  }
+
+  /**
+   * Rukuje neuspešnim paymentom - preusmerava korisnika na failed URL
+   */
+  private handlePaymentFailed(): void {
+    this.stopPolling(); // Zaustavi polling
+    
+    const paymentData = this.paymentData();
+    if (paymentData && paymentData.failedUrl) {
+      setTimeout(() => {
+        window.location.href = paymentData.failedUrl!;
+      }, 2000);
+    } else {
+      console.warn('Failed URL not available, cannot redirect');
+    }
+  }
+
+  /**
+   * Rukuje greškom paymenta - preusmerava korisnika na error URL
+   */
+  private handlePaymentError(): void {
+    this.stopPolling(); // Zaustavi polling
+    
+    const paymentData = this.paymentData();
+    if (paymentData && paymentData.errorUrl) {
+      setTimeout(() => {
+        window.location.href = paymentData.errorUrl!;
+      }, 2000);
+    } else {
+      console.warn('Error URL not available, cannot redirect');
     }
   }
 

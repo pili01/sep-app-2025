@@ -6,24 +6,19 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * DTO za BlockCypher Transaction Output
- */
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockCypherOutput {
     @JsonProperty("value")
-    private Long value; // Iznos u satoshima
+    private Long value;
     
     @JsonProperty("addresses")
-    private List<String> addresses; // Lista adresa koje primaju
+    private List<String> addresses;
     
     @JsonProperty("script")
-    private String script; // Script
-    
-    /**
-     * Konvertuje value iz satoshi u BTC
-     */
+    private String script;
+
     public BigDecimal getValueInBTC() {
         if (value == null) {
             return BigDecimal.ZERO;

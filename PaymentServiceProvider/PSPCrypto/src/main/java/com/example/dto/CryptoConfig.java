@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 public class CryptoConfig {
 
     @JsonProperty("walletAddress")
-    private String walletAddress; // Opciono: koristi se kao fallback ako BlockCypher API ne radi, ili za backward compatibility (stara logika bez BlockCypher API)
+    private String walletAddress;        // bilo koja adresa ako ovi apiji ne rade da na ovo usmjeri
 
     @JsonProperty("blockcypherApiToken")
-    private String blockcypherApiToken; // BlockCypher API token (opciono - za testnet može biti prazan string "")
+    private String blockcypherApiToken; // ovo ide opciono ako os za test je prazan
 
     @JsonProperty("network")
-    private String network; // "testnet" ili "mainnet"
+    private String network; // testnet
 
     @JsonProperty("requiredConfirmations")
-    private Integer requiredConfirmations = 1; // Koliko potvrda treba (default 1)
+    private Integer requiredConfirmations = 1; // jedna potvrda mi je dosta
 }

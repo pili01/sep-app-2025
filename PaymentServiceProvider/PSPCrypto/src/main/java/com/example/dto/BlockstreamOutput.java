@@ -5,21 +5,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.math.BigDecimal;
 
-/**
- * DTO za Blockstream API Transaction Output
- */
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockstreamOutput {
     @JsonProperty("value")
-    private Long value; // Iznos u satoshima
+    private Long value;
     
     @JsonProperty("scriptpubkey_address")
-    private String scriptpubkeyAddress; // Bitcoin adresa
+    private String scriptpubkeyAddress;
     
-    /**
-     * Konvertuje value iz satoshi u BTC
-     */
+
     public BigDecimal getValueInBTC() {
         if (value == null) {
             return BigDecimal.ZERO;

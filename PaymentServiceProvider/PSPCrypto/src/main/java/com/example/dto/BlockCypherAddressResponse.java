@@ -6,11 +6,6 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * DTO za BlockCypher API response kada se proverava adresa SA TRANSAKCIJAMA
- * GET /v1/btc/test3/addrs/{address}/full?limit=50
- * Koristimo /full endpoint da dobijemo sve transakcije sa detaljima
- */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockCypherAddressResponse {
@@ -18,19 +13,19 @@ public class BlockCypherAddressResponse {
     private String address;
     
     @JsonProperty("balance")
-    private Long balance; // Balance u satoshima (1 BTC = 100,000,000 satoshi)
+    private Long balance;
     
     @JsonProperty("total_received")
-    private Long totalReceived; // Ukupno primljeno u satoshima
+    private Long totalReceived;
     
     @JsonProperty("total_sent")
-    private Long totalSent; // Ukupno poslato u satoshima
+    private Long totalSent;
     
     @JsonProperty("unconfirmed_balance")
-    private Long unconfirmedBalance; // Ne potvrđen balance u satoshima
-    
+    private Long unconfirmedBalance;
+
     @JsonProperty("final_balance")
-    private Long finalBalance; // Finalni balance u satoshima
+    private Long finalBalance;
     
     @JsonProperty("n_tx")
     private Integer nTx; // Broj transakcija
@@ -39,11 +34,9 @@ public class BlockCypherAddressResponse {
     private Integer unconfirmedNTx; // Broj nepotvrđenih transakcija
     
     @JsonProperty("txs")
-    private List<BlockCypherTransaction> transactions; // Lista transakcija
+    private List<BlockCypherTransaction> transactions;
     
-    /**
-     * Konvertuje balance iz satoshi u BTC
-     */
+
     public BigDecimal getBalanceInBTC() {
         if (balance == null) {
             return BigDecimal.ZERO;
@@ -51,9 +44,7 @@ public class BlockCypherAddressResponse {
         return BigDecimal.valueOf(balance).divide(BigDecimal.valueOf(100_000_000), 8, java.math.RoundingMode.HALF_UP);
     }
     
-    /**
-     * Konvertuje final balance iz satoshi u BTC
-     */
+
     public BigDecimal getFinalBalanceInBTC() {
         if (finalBalance == null) {
             return BigDecimal.ZERO;

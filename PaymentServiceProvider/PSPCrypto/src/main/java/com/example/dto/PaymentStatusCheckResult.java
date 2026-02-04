@@ -15,53 +15,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentStatusCheckResult {
-    /**
-     * Da li je payment pronađen na blockchain-u
-     */
-    private boolean paymentFound;
-    
-    /**
-     * Transaction hash (ako je payment pronađen)
-     */
+
+    private boolean paymentFound; //ima li transakcija na blokcejnu
+
     private String transactionHash;
-    
-    /**
-     * Broj potvrda (confirmations)
-     */
+
     private Integer confirmations;
-    
-    /**
-     * Da li je payment potvrđen (ima dovoljno potvrda)
-     */
+
     private boolean confirmed;
-    
-    /**
-     * Iznos koji je stigao na adresu (u BTC)
-     */
-    private BigDecimal receivedAmount;
-    
-    /**
-     * Očekivani iznos (u BTC)
-     */
-    private BigDecimal expectedAmount;
-    
-    /**
-     * Da li iznos odgovara očekivanom (sa tolerancijom)
-     */
-    private boolean amountMatches;
-    
-    /**
-     * Timestamp kada je payment primljen (ako je pronađen)
-     */
+
+    private BigDecimal receivedAmount;  //iznos koji jje stigao
+
+    private BigDecimal expectedAmount;  // ocekivani iznos
+
+    private boolean amountMatches;     //da li iznos odgovara ocekivnom
+
     private LocalDateTime receivedAt;
-    
-    /**
-     * Timestamp kada je payment potvrđen (ako je potvrđen)
-     */
+
     private LocalDateTime confirmedAt;
-    
-    /**
-     * Poruka o statusu (za logovanje)
-     */
+
     private String message;
 }

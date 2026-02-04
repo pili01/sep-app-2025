@@ -16,11 +16,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PaymentRequest {
 
-    // PSP šalje Long transactionId, ali mi ga čuvamo kao String
+
     @NotNull(message = "Transaction ID is required")
     private Long transactionId;
 
-    // PSP šalje Double amount, ali mi ga čuvamo kao BigDecimal
+
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
     private Double amount;

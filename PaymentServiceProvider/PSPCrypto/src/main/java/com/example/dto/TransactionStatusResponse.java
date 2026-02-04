@@ -30,4 +30,7 @@ public class TransactionStatusResponse {
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
     private String errorMessage;
+    private String successUrl;
+    private String failedUrl;
+    private String errorUrl;
 }

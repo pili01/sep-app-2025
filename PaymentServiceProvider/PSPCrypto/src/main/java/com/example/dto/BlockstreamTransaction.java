@@ -6,28 +6,22 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * DTO za Blockstream API Transaction objekat
- * GET https://blockstream.info/testnet/api/tx/{txid}
- */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockstreamTransaction {
     @JsonProperty("txid")
-    private String txid; // Transaction hash
+    private String txid; // hes od transakcije
     
     @JsonProperty("status")
-    private BlockstreamStatus status; // Status sa confirmations
+    private BlockstreamStatus status;
     
     @JsonProperty("fee")
-    private Long fee; // Transaction fee u satoshima
+    private Long fee;
     
     @JsonProperty("vout")
-    private List<BlockstreamOutput> vout; // Output transakcije
-    
-    /**
-     * Konvertuje fee iz satoshi u BTC
-     */
+    private List<BlockstreamOutput> vout;
+
+
     public BigDecimal getFeeInBTC() {
         if (fee == null) {
             return BigDecimal.ZERO;

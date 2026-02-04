@@ -4,23 +4,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-/**
- * DTO za BlockCypher API response kada se generiše nova Bitcoin adresa
- * POST /v1/btc/test3/addrs
- */
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlockCypherGenerateAddressResponse {
     
     @JsonProperty("address")
-    private String address; // Nova generisana Bitcoin adresa
+    private String address;  //samo adresa mi treba generisana za ovim apijem
     
     @JsonProperty("private")
-    private String privateKey; // Private key (samo za testnet, ne koristimo ga)
+    private String privateKey; //ne koristim za testnet
     
     @JsonProperty("public")
-    private String publicKey; // Public key (ne koristimo ga)
+    private String publicKey; //ne koristim za testnet
     
     @JsonProperty("wif")
-    private String wif; // Wallet Import Format (ne koristimo ga)
+    private String wif; //ne koristim za testnet
 }

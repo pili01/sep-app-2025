@@ -28,26 +28,20 @@ public class PaymentService {
 
     @Transactional
     public Map<String, String> initiatePayment(PaymentRequest request) {
-        // Convert Long transactionId to String and Double amount to BigDecimal
+
         String transactionId = String.valueOf(request.getTransactionId());
         BigDecimal amount = BigDecimal.valueOf(request.getAmount());
-        
-        log.info("Initiating crypto payment for transaction: {}", transactionId);
 
-        // Check if transaction already exists
+
         if (transactionRepository.findByPspTransactionId(transactionId).isPresent()) {
             throw new IllegalArgumentException(
                     "Transaction can be initialized only one time: " + transactionId);
         }
 
-        // 1. Parsira crypto config iz merchant config JSON
+
         CryptoConfig cryptoConfig = bitcoinClient.parseConfig(request.getMerchantConfig());
         
-        // Validacija: mora postojati bar jedna od opcija:
-        // - blockcypherApiToken (za generisanje novih adresa) - može biti prazan string "" za testnet
-        // - walletAddress (za statičku adresu - backward compatibility)
-        // 
-        // Ako koristiš BlockCypher API, walletAddress je opciono (samo za fallback ako API ne radi)
+
         boolean hasBlockCypherToken = cryptoConfig.getBlockcypherApiToken() != null;
         boolean hasWalletAddress = cryptoConfig.getWalletAddress() != null && !cryptoConfig.getWalletAddress().trim().isEmpty();
         
@@ -57,20 +51,19 @@ public class PaymentService {
                     "or provide 'walletAddress' for static address (backward compatibility).");
         }
 
-        // 2. Konvertuje fiat → BTC
+
         BigDecimal bitcoinAmount = bitcoinClient.convertToBitcoin(
                 amount,
                 request.getCurrency()
         );
         
-        log.info("Converted {} {} to {} BTC", amount, request.getCurrency(), bitcoinAmount);
 
-        // 3. Generiše Bitcoin adresu (merchant-ova adresa)
+
+
         String bitcoinAddress = bitcoinClient.generateBitcoinAddress(cryptoConfig);
         
-        log.info("Using Bitcoin address: {}", bitcoinAddress);
 
-        // 4. Kreira transakciju u bazi
+
         Transaction transaction = new Transaction();
         transaction.setPspTransactionId(transactionId);
         transaction.setAmount(amount);
@@ -78,7 +71,6 @@ public class PaymentService {
         transaction.setBitcoinAmount(bitcoinAmount);
         transaction.setBitcoinAddress(bitcoinAddress);
         transaction.setStatus(TransactionStatus.PENDING);
-        transaction.setMerchantConfig(request.getMerchantConfig());
         transaction.setWebhookUrl(request.getWebhookUrl());
         transaction.setSuccessUrl(request.getSuccessUrl());
         transaction.setFailedUrl(request.getFailedUrl());
@@ -92,15 +84,9 @@ public class PaymentService {
         
         transactionRepository.save(transaction);
         
-        log.info("Transaction saved: ID={}, Status={}, BitcoinAmount={}, BitcoinAddress={}",
-                transaction.getId(), transaction.getStatus(), bitcoinAmount, bitcoinAddress);
-
-        // 5. Vraća payment URL (PSP frontend stranica za prikaz Bitcoin adrese)
-        // PSP frontend će pozvati Crypto API da dobije podatke
-        String paymentUrl = configProperties.getPspFrontendUrl() + "/payment/crypto/" + transaction.getPspTransactionId();
         
-        log.info("Crypto payment initiated successfully. Transaction ID: {}, Payment URL: {}",
-                transaction.getPspTransactionId(), paymentUrl);
+        String paymentUrl = configProperties.getPspFrontendUrl() + "/payment/crypto/" + transaction.getPspTransactionId();
+
 
         return Map.of(
                 "paymentId", transaction.getPspTransactionId(),
@@ -110,13 +96,10 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public TransactionStatusResponse getTransactionStatus(String transactionId) {
-        log.info("Checking status for transaction: {}", transactionId);
 
         Transaction transaction = transactionRepository.findByPspTransactionId(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
 
-        log.info("Transaction found: ID={}, BitcoinAmount={}, BitcoinAddress={}", 
-                transaction.getId(), transaction.getBitcoinAmount(), transaction.getBitcoinAddress());
 
         TransactionStatusResponse response = TransactionStatusResponse.builder()
                 .transactionId(transaction.getPspTransactionId())
@@ -129,9 +112,11 @@ public class PaymentService {
                 .createdAt(transaction.getCreatedAt())
                 .completedAt(transaction.getCompletedAt())
                 .errorMessage(transaction.getErrorMessage())
+                .successUrl(transaction.getSuccessUrl())
+                .failedUrl(transaction.getFailedUrl())
+                .errorUrl(transaction.getErrorUrl())
                 .build();
-        
-        log.info("Response: BitcoinAmount={}", response.getBitcoinAmount());
+
         return response;
     }
 }
