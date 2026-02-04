@@ -18,4 +18,5 @@ public class CheckStatusResponse {
     private BigDecimal amount;
     private String currency;
     private String message;
+    private String paymentMethodName; // Added for WebShop verification (e.g., "Crypto", "Bitcoin")
 }

@@ -32,6 +32,15 @@ public class ConfigProperties {
     @Value("${exchange.rate.api.url}")
     private String exchangeRateApiUrl;
 
+    @Value("${bitcoin.api.url:https://api.blockcypher.com/v1/btc/test3}")
+    private String bitcoinApiUrl;
+
+    @Value("${blockstream.api.url:https://blockstream.info/testnet/api}")
+    private String blockstreamApiUrl;
+
     @Value("${server.port}")
     private int serverPort;
+
+    @Value("${psp.frontend.url:https://localhost:4202}")
+    private String pspFrontendUrl;
 }

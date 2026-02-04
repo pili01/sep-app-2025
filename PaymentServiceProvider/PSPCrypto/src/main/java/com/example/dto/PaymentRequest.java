@@ -1,5 +1,7 @@
 package com.example.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -14,12 +16,14 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PaymentRequest {
 
-    @NotBlank(message = "Transaction ID is required")
-    private String transactionId;
+    // PSP šalje Long transactionId, ali mi ga čuvamo kao String
+    @NotNull(message = "Transaction ID is required")
+    private Long transactionId;
 
+    // PSP šalje Double amount, ali mi ga čuvamo kao BigDecimal
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
-    private BigDecimal amount;
+    private Double amount;
 
     @NotBlank(message = "Currency is required")
     private String currency;

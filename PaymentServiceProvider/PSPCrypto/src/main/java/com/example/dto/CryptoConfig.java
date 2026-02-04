@@ -11,7 +11,10 @@ import lombok.NoArgsConstructor;
 public class CryptoConfig {
 
     @JsonProperty("walletAddress")
-    private String walletAddress; // Merchant wallet adresa
+    private String walletAddress; // Opciono: koristi se kao fallback ako BlockCypher API ne radi, ili za backward compatibility (stara logika bez BlockCypher API)
+
+    @JsonProperty("blockcypherApiToken")
+    private String blockcypherApiToken; // BlockCypher API token (opciono - za testnet može biti prazan string "")
 
     @JsonProperty("network")
     private String network; // "testnet" ili "mainnet"

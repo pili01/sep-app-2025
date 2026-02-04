@@ -59,11 +59,11 @@ public class Transaction {
     private String errorUrl;
 
     // Crypto specific fields
-    @Column(unique = true)
-    private String bitcoinAddress; // Bitcoin adresa za plaćanje
-
     @Column
-    private BigDecimal bitcoinAmount; // Iznos u BTC
+    private String bitcoinAddress; // Bitcoin adresa za plaćanje (merchant adresa, može biti ista za više transakcija)
+
+    @Column(precision = 18, scale = 8)
+    private BigDecimal bitcoinAmount; // Iznos u BTC (precision=18, scale=8 za Bitcoin standard)
 
     @Column
     private Integer confirmations = 0; // Broj potvrda na blockchain-u
