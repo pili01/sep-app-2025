@@ -69,7 +69,6 @@ public class PaymentPollingService {
 
                 // Ako payment nije pronađen, nastavi (može biti da još nije potvrđen)
                 if (!checkResult.isPaymentFound()) {
-                    log.debug("Payment not found for transaction: {}, continuing...", transaction.getPspTransactionId());
                     continue;
                 }
 
@@ -78,6 +77,7 @@ public class PaymentPollingService {
                     BigDecimal receivedAmount = checkResult.getReceivedAmount();
                     BigDecimal expectedAmount = transaction.getBitcoinAmount();
                     
+
                     // Ako je primljena količina manja od očekivane (sa tolerancijom)
                     BigDecimal difference = expectedAmount.subtract(receivedAmount);
                     BigDecimal tolerance = new BigDecimal("0.00000001");

@@ -83,7 +83,6 @@ public class BitcoinClient {
             return bitcoinAmount;
             
         } catch (Exception e) {
-            log.error("Error converting {} {} to BTC", fiatAmount, fiatCurrency, e);
             throw new RuntimeException("Failed to convert " + fiatAmount + " " + fiatCurrency + " to BTC: " + e.getMessage(), e);
         }
     }
@@ -177,7 +176,6 @@ public class BitcoinClient {
         } else if (networkLower.contains("main") || networkLower.equals("mainnet")) {
             return "https://api.blockcypher.com/v1/btc/main";
         } else {
-            log.warn("Unknown network: {}, defaulting to testnet", network);
             return config.getBitcoinApiUrl();
         }
     }
@@ -259,6 +257,10 @@ public class BitcoinClient {
             }
 
 
+
+            BigDecimal maxReceivedAmount = BigDecimal.ZERO;
+            String foundTransactionHash = null;
+
             for (Map<String, Object> txObj : transactionsRaw) {
                 BlockstreamTransaction tx = objectMapper.convertValue(txObj, BlockstreamTransaction.class);
 
@@ -282,10 +284,25 @@ public class BitcoinClient {
                     if (amountMatches) {
                         return processFoundTransactionViaBlockstream(tx, bitcoinAddress, expectedAmount, requiredConfirmations);
                     } else {
-                        log.info("Transaction {} amount does not match (difference: {} BTC), continuing search...",
-                                tx.getTxid(), difference);
+
+                        if (receivedAmount.compareTo(maxReceivedAmount) > 0) {
+                            maxReceivedAmount = receivedAmount;
+                            foundTransactionHash = tx.getTxid();
+                        }
                     }
                 }
+            }
+
+            if (maxReceivedAmount.compareTo(BigDecimal.ZERO) > 0) {
+                return PaymentStatusCheckResult.builder()
+                        .paymentFound(true) // Payment je pronađen, ali amount ne odgovara
+                        .message(String.format("Transaction found but amount mismatch: received %s BTC, expected %s BTC",
+                                maxReceivedAmount, expectedAmount))
+                        .expectedAmount(expectedAmount)
+                        .receivedAmount(maxReceivedAmount)
+                        .amountMatches(false)
+                        .transactionHash(foundTransactionHash)
+                        .build();
             }
             
             // Nije pronađena transakcija sa očekivanim iznosom
