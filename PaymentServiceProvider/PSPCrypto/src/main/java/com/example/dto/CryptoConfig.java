@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CryptoConfig {
 
-    @JsonProperty("walletAddress")
-    private String walletAddress;        // bilo koja adresa ako ovi apiji ne rade da na ovo usmjeri
+    @JsonProperty("xpub")
+    private String xpub; // Master public key (Extended Public Key) za HD wallet generisanje adresa
 
-    @JsonProperty("blockcypherApiToken")
-    private String blockcypherApiToken; // ovo ide opciono ako os za test je prazan
+    @JsonProperty("walletAddress")
+    private String walletAddress;
 
     @JsonProperty("network")
-    private String network; // testnet
+    private String network;
 
     @JsonProperty("requiredConfirmations")
     private Integer requiredConfirmations = 1; // jedna potvrda mi je dosta

@@ -51,7 +51,7 @@ public class PaymentPollingService {
 
 
     @Transactional
-    private void processTransactions(List<Transaction> transactions) {
+    public void processTransactions(List<Transaction> transactions) {
         for (Transaction transaction : transactions) {
             try {
 
@@ -65,7 +65,6 @@ public class PaymentPollingService {
                         transaction.getGlobalTransactionId(),
                         transaction.getCreatedAt()
                 );
-
 
                 // Ako payment nije pronađen, nastavi (može biti da još nije potvrđen)
                 if (!checkResult.isPaymentFound()) {

@@ -1,16 +1,25 @@
 package com.example.service;
 
 import com.example.config.ConfigProperties;
-import com.example.dto.BlockCypherGenerateAddressResponse;
 import com.example.dto.BlockstreamOutput;
-import com.example.dto.BlockstreamStatus;
 import com.example.dto.BlockstreamTransaction;
 import com.example.dto.CryptoConfig;
 import com.example.dto.PaymentStatusCheckResult;
+import com.example.model.AddressIndex;
+import com.example.repository.AddressIndexRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.HDKeyDerivation;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.params.MainNetParams;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
@@ -27,6 +36,7 @@ public class BitcoinClient {
     private final ObjectMapper objectMapper;
     private final ConfigProperties config;
     private final RestClient.Builder restClientBuilder;
+    private final AddressIndexRepository addressIndexRepository;
 
 
     public CryptoConfig parseConfig(String configJson) {
@@ -78,8 +88,6 @@ public class BitcoinClient {
             // ovde konvertujem iznos u eurima kroz iznos u eurima jednog bitkoina za dobijem iznos u bitkoinu
             BigDecimal bitcoinAmount = fiatAmount.divide(bitcoinPrice, 8, RoundingMode.HALF_UP);
             
-            log.info("Converted {} {} = {} BTC", fiatAmount, fiatCurrency, bitcoinAmount);
-            
             return bitcoinAmount;
             
         } catch (Exception e) {
@@ -88,95 +96,110 @@ public class BitcoinClient {
     }
 
 
-    public String generateBitcoinAddress(CryptoConfig cryptoConfig) {
-
+    public AddressGenerationResult generateBitcoinAddressWithIndex(CryptoConfig cryptoConfig) {
         if (cryptoConfig == null) {
             throw new IllegalArgumentException("CryptoConfig cannot be null");
         }
 
-        if (cryptoConfig.getBlockcypherApiToken() != null) {
+        if (cryptoConfig.getXpub() != null && !cryptoConfig.getXpub().trim().isEmpty()) {
             try {
-                return generateAddressViaBlockCypher(cryptoConfig);
+                return generateAddressFromXpub(cryptoConfig);
             } catch (Exception e) {
-
-                String walletAddress = cryptoConfig.getWalletAddress();
-                if (walletAddress != null && !walletAddress.trim().isEmpty()) {
-                    return walletAddress;
+                if (cryptoConfig.getWalletAddress() != null && !cryptoConfig.getWalletAddress().trim().isEmpty()) {
+                    return new AddressGenerationResult(cryptoConfig.getWalletAddress(), null);
                 }
-
-                throw new RuntimeException(
-                        "BlockCypher API failed (likely no internet connection: " + e.getMessage() + ") " +
-                        "and no walletAddress fallback provided. " +
-                        "Please provide 'walletAddress' in configJson to use static address when offline.", e);
+                throw new RuntimeException("Failed to generate address from xpub and no fallback walletAddress provided: " + e.getMessage(), e);
             }
         }
 
+        // Prioritet 2: Statička walletAddress (backward compatibility)
         String walletAddress = cryptoConfig.getWalletAddress();
-        
-        if (walletAddress == null || walletAddress.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Either provide 'blockcypherApiToken' (can be empty string '' for testnet) to generate new addresses via BlockCypher API, " +
-                    "or provide 'walletAddress' for static address (backward compatibility).");
+        if (walletAddress != null && !walletAddress.trim().isEmpty()) {
+            return new AddressGenerationResult(walletAddress, null);
         }
 
-        return walletAddress;
+        throw new IllegalArgumentException(
+                "Either provide 'xpub' for HD wallet address generation, " +
+                "or provide 'walletAddress' for static address (backward compatibility).");
     }
-    
 
-    private String generateAddressViaBlockCypher(CryptoConfig cryptoConfig) {
 
+    public String generateBitcoinAddress(CryptoConfig cryptoConfig) {
+        return generateBitcoinAddressWithIndex(cryptoConfig).address;
+    }
+
+
+    @Transactional
+    public AddressGenerationResult generateAddressFromXpub(CryptoConfig cryptoConfig) {
         try {
+            String xpubString = cryptoConfig.getXpub().trim();
 
-            String baseUrl = determineNetworkEndpoint(cryptoConfig.getNetwork());
-            
-            RestClient restClient = restClientBuilder
-                    .baseUrl(baseUrl)
-                    .build();
+            NetworkParameters params = determineNetworkParams(cryptoConfig.getNetwork(), xpubString);
 
-            String uri = "/addrs";
-            if (cryptoConfig.getBlockcypherApiToken() != null && !cryptoConfig.getBlockcypherApiToken().trim().isEmpty()) {
-                uri += "?token=" + cryptoConfig.getBlockcypherApiToken();
+            DeterministicKey masterPublicKey = DeterministicKey.deserializeB58(xpubString, params);
+
+            AddressIndex addressIndex = addressIndexRepository.findById(1L)
+                    .orElseGet(() -> {
+                        AddressIndex newIndex = new AddressIndex();
+                        newIndex.setId(1L);
+                        newIndex.setLastUsedIndex(0);
+                        return addressIndexRepository.save(newIndex);
+                    });
+
+
+            int nextIndex = addressIndex.getLastUsedIndex() + 1;
+
+            DeterministicKey accountKey = HDKeyDerivation.deriveChildKey(masterPublicKey, 0);
+            DeterministicKey addressKey = HDKeyDerivation.deriveChildKey(accountKey, nextIndex);
+
+            Address address;
+            try {
+                address = SegwitAddress.fromKey(params, addressKey);
+            } catch (Exception e) {
+                address = LegacyAddress.fromKey(params, addressKey);
             }
 
-            BlockCypherGenerateAddressResponse response = restClient.post()
-                    .uri(uri)
-                    .retrieve()
-                    .body(BlockCypherGenerateAddressResponse.class);
-            
-            if (response == null || response.getAddress() == null || response.getAddress().trim().isEmpty()) {
-                throw new RuntimeException("BlockCypher API returned invalid response: address is null or empty");
-            }
-            
-            String newAddress = response.getAddress();
+            addressIndex.setLastUsedIndex(nextIndex);
+            addressIndexRepository.save(addressIndex);
+            return new AddressGenerationResult(address.toString(), nextIndex);
 
-            if (newAddress != null) {
-                newAddress = newAddress.trim();
-            }
-
-            if (newAddress == null || newAddress.isEmpty() || newAddress.length() < 26 || newAddress.length() > 35) {
-                throw new RuntimeException("BlockCypher API returned invalid address format: " + newAddress);
-            }
-
-            return newAddress;
-            
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate Bitcoin address via BlockCypher API: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to generate address from xpub: " + e.getMessage(), e);
         }
     }
-    
 
-    private String determineNetworkEndpoint(String network) {
-        if (network == null || network.trim().isEmpty()) {
-            return config.getBitcoinApiUrl(); // testnet je network
+
+    private NetworkParameters determineNetworkParams(String network, String xpub) {
+
+        if (network != null && !network.trim().isEmpty()) {
+            String networkLower = network.toLowerCase();
+            if (networkLower.contains("test") || networkLower.equals("testnet")) {
+                return TestNet3Params.get();
+            } else if (networkLower.contains("main") || networkLower.equals("mainnet")) {
+                return MainNetParams.get();
+            }
         }
-        
-        String networkLower = network.toLowerCase();
-        if (networkLower.contains("test") || networkLower.equals("testnet")) {
-            return config.getBitcoinApiUrl();
-        } else if (networkLower.contains("main") || networkLower.equals("mainnet")) {
-            return "https://api.blockcypher.com/v1/btc/main";
-        } else {
-            return config.getBitcoinApiUrl();
+
+        if (xpub != null && !xpub.trim().isEmpty()) {
+            String xpubLower = xpub.trim().toLowerCase();
+            if (xpubLower.startsWith("vpub") || xpubLower.startsWith("tpub")) {
+                return TestNet3Params.get();
+            }
+            if (xpubLower.startsWith("xpub") || xpubLower.startsWith("zpub")) {
+                return MainNetParams.get();
+            }
+        }
+
+        return TestNet3Params.get();
+    }
+
+    public static class AddressGenerationResult {
+        public final String address;
+        public final Integer derivationIndex;
+
+        public AddressGenerationResult(String address, Integer derivationIndex) {
+            this.address = address;
+            this.derivationIndex = derivationIndex;
         }
     }
 
@@ -198,10 +221,10 @@ public class BitcoinClient {
         }
 
         bitcoinAddress = bitcoinAddress.trim();
-        if (bitcoinAddress.length() < 26 || bitcoinAddress.length() > 35) {
+        if (bitcoinAddress.length() < 26 || bitcoinAddress.length() > 62) {
             return PaymentStatusCheckResult.builder()
                     .paymentFound(false)
-                    .message("Invalid Bitcoin address length: " + bitcoinAddress.length())
+                    .message("Invalid Bitcoin address length: " + bitcoinAddress.length() + " (expected 26-62 characters)")
                     .expectedAmount(expectedAmount)
                     .receivedAmount(BigDecimal.ZERO)
                     .amountMatches(false)
@@ -233,13 +256,14 @@ public class BitcoinClient {
             RestClient restClient = restClientBuilder
                     .baseUrl(config.getBlockstreamApiUrl())
                     .build();
-            
+
             // Ako imamo hash, provjeri direktno
             if (existingTransactionHash != null && !existingTransactionHash.trim().isEmpty()) {
                 return checkTransactionByHashViaBlockstream(existingTransactionHash, bitcoinAddress, expectedAmount, requiredConfirmations);
             }
             
             // ako nemamo hash, probaj da nađeš transakcije na adresi
+            String apiUrl = config.getBlockstreamApiUrl() + "/address/" + bitcoinAddress + "/txs";
 
             List<Map<String, Object>> transactionsRaw = restClient.get()
                     .uri("/address/{address}/txs", bitcoinAddress)
@@ -264,7 +288,6 @@ public class BitcoinClient {
             for (Map<String, Object> txObj : transactionsRaw) {
                 BlockstreamTransaction tx = objectMapper.convertValue(txObj, BlockstreamTransaction.class);
 
-                
                 if (tx.getVout() == null) {
                     continue;
                 }
@@ -280,11 +303,9 @@ public class BitcoinClient {
                     BigDecimal difference = receivedAmount.subtract(expectedAmount).abs();
                     boolean amountMatches = difference.compareTo(new BigDecimal("0.00000001")) <= 0;
 
-                    
                     if (amountMatches) {
                         return processFoundTransactionViaBlockstream(tx, bitcoinAddress, expectedAmount, requiredConfirmations);
                     } else {
-
                         if (receivedAmount.compareTo(maxReceivedAmount) > 0) {
                             maxReceivedAmount = receivedAmount;
                             foundTransactionHash = tx.getTxid();

@@ -42,27 +42,25 @@ public class PaymentService {
         CryptoConfig cryptoConfig = bitcoinClient.parseConfig(request.getMerchantConfig());
         
 
-        boolean hasBlockCypherToken = cryptoConfig.getBlockcypherApiToken() != null;
+        // Validacija: mora imati xpub ili walletAddress
+        boolean hasXpub = cryptoConfig.getXpub() != null && !cryptoConfig.getXpub().trim().isEmpty();
         boolean hasWalletAddress = cryptoConfig.getWalletAddress() != null && !cryptoConfig.getWalletAddress().trim().isEmpty();
         
-        if (!hasBlockCypherToken && !hasWalletAddress) {
+        if (!hasXpub && !hasWalletAddress) {
             throw new IllegalArgumentException(
-                    "Either provide 'blockcypherApiToken' (can be empty string '' for testnet) to generate new addresses via BlockCypher API, " +
+                    "Either provide 'xpub' for HD wallet address generation, " +
                     "or provide 'walletAddress' for static address (backward compatibility).");
         }
-
 
         BigDecimal bitcoinAmount = bitcoinClient.convertToBitcoin(
                 amount,
                 request.getCurrency()
         );
-        
 
-
-
-        String bitcoinAddress = bitcoinClient.generateBitcoinAddress(cryptoConfig);
-        
-
+        // Generiši adresu (sa ili bez indeksa)
+        BitcoinClient.AddressGenerationResult addressResult = bitcoinClient.generateBitcoinAddressWithIndex(cryptoConfig);
+        String bitcoinAddress = addressResult.address;
+        Integer derivationIndex = addressResult.derivationIndex;
 
         Transaction transaction = new Transaction();
         transaction.setPspTransactionId(transactionId);
@@ -70,6 +68,7 @@ public class PaymentService {
         transaction.setCurrency(request.getCurrency());
         transaction.setBitcoinAmount(bitcoinAmount);
         transaction.setBitcoinAddress(bitcoinAddress);
+        transaction.setDerivationIndex(derivationIndex); // Indeks adrese iz HD wallet-a
         transaction.setStatus(TransactionStatus.PENDING);
         transaction.setWebhookUrl(request.getWebhookUrl());
         transaction.setSuccessUrl(request.getSuccessUrl());

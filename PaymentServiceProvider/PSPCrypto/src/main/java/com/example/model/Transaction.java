@@ -69,6 +69,9 @@ public class Transaction {
     private Integer requiredConfirmations = 1;
 
     @Column
+    private Integer derivationIndex; // Indeks adrese iz HD wallet-a za xpub generisanje
+
+    @Column
     private LocalDateTime paymentReceivedAt;
 
     @Column(columnDefinition = "TEXT")

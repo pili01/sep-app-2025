@@ -114,6 +114,13 @@
             <artifactId>httpclient5</artifactId>
         </dependency>
 
+        <!-- BitcoinJ for HD wallet support -->
+        <dependency>
+            <groupId>org.bitcoinj</groupId>
+            <artifactId>bitcoinj-core</artifactId>
+            <version>0.16.2</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
