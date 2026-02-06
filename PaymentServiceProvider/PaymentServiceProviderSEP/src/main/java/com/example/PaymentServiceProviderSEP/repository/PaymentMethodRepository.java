@@ -25,7 +25,7 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
         CASE WHEN pm.lastHeartbeat IS NULL THEN 0 ELSE 1 END,
         pm.lastHeartbeat ASC
 """)
-    Optional<PaymentMethod> findNextForHeartbeat(
+    List<Optional<PaymentMethod>> findNextForHeartbeat(
             @Param("code") PaymentMethodCode code
     );
 

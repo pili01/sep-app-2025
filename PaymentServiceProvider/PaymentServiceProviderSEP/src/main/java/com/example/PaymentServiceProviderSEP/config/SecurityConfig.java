@@ -1,5 +1,6 @@
 package com.example.PaymentServiceProviderSEP.config;
 
+import com.example.PaymentServiceProviderSEP.config.NginxGatewayFilter;
 import com.example.PaymentServiceProviderSEP.jwt.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,10 +16,13 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final NginxGatewayFilter nginxGatewayFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource,
+                          NginxGatewayFilter nginxGatewayFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.corsConfigurationSource = corsConfigurationSource;
+        this.nginxGatewayFilter = nginxGatewayFilter;
     }
 
     @Bean
@@ -34,7 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/webhook/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(nginxGatewayFilter, JwtAuthFilter.class);
 
         return http.build();
     }

@@ -47,9 +47,16 @@
       "group": { "kind": "build", "name": "Backend", "isDefault": true }
     },
     {
-      "label": "$(server)💰 Backend › PSP › Start",
+      "label": "$(server)💰0 Backend › PSP › Start",
       "type": "shell",
-      "command": "cd PaymentServiceProvider/PaymentServiceProviderSEP; ./mvnw spring-boot:run",
+      "command": "cd PaymentServiceProvider/PaymentServiceProviderSEP; $env:SERVER_PORT='8440'; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)💰9 Backend › PSP › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PaymentServiceProviderSEP; $env:SERVER_PORT='8439'; ./mvnw spring-boot:run",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Backend", "isDefault": true }
     },
@@ -71,7 +78,8 @@
       "label": "🥾 Backend › Run All",
       "dependsOn": [
         "$(server)🏦 Backend › Bank › Start",
-        "$(server)💰 Backend › PSP › Start",
+        "$(server)💰0 Backend › PSP › Start",
+        "$(server)💰9 Backend › PSP › Start",
         "$(server)💸 Backend › PayPal › Start",
         "$(server)🛒 Backend › WS › Start"
       ],

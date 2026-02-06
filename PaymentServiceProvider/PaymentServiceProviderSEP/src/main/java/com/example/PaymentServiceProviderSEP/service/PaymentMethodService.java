@@ -59,9 +59,11 @@ public class PaymentMethodService {
         log.debug("Starting heartbeat round-robin");
 
         paymentMethodRepository.findNextForHeartbeat(PaymentMethodCode.CUSTOM)
-                .ifPresent(method -> {
-                    log.info("Selected payment method {} for heartbeat", method.getId());
-                    heartbeat(method);
+                .forEach(method -> {
+                    if(method.isPresent()){
+                    log.info("Selected payment method {} for heartbeat", method.get().getId());
+                    heartbeat(method.get());
+                    }
                 });
 
         log.debug("Completed heartbeat round-robin");

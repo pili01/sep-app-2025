@@ -1,0 +1,5 @@
+127.0.0.1 - - [06/Feb/2026:11:54:35 +0100] "GET /api/payment-methods HTTP/1.1" 200 to: 127.0.0.1:8440
+127.0.0.1 - - [06/Feb/2026:11:54:36 +0100] "GET /api/payment-methods/icon/qrCode.jpg HTTP/1.1" 200 to: 127.0.0.1:8440
+127.0.0.1 - - [06/Feb/2026:11:54:36 +0100] "GET /api/payment-methods/icon/card.jpg HTTP/1.1" 200 to: 127.0.0.1:8440
+127.0.0.1 - - [06/Feb/2026:11:54:36 +0100] "GET /api/payment-methods/icon/7b3db369-a362-4710-9b1e-b3bd5b646683.jpg HTTP/1.1" 200 to: 127.0.0.1:8439
+127.0.0.1 - - [06/Feb/2026:11:54:36 +0100] "GET /api/payment-methods/icon/4a305e21-5860-42ea-8fcb-9874e5c187d1.jpg HTTP/1.1" 200 to: 127.0.0.1:8439
