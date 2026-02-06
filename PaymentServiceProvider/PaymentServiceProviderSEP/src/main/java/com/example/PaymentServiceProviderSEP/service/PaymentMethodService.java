@@ -1,6 +1,5 @@
 package com.example.PaymentServiceProviderSEP.service;
 
-import com.example.PaymentServiceProviderSEP.controller.PaymentMethodController;
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodConnectRequest;
 import com.example.PaymentServiceProviderSEP.dto.paymentMethod.PaymentMethodDTO;
 import com.example.PaymentServiceProviderSEP.model.PaymentMethod;
@@ -8,7 +7,6 @@ import com.example.PaymentServiceProviderSEP.model.PaymentMethodCode;
 import com.example.PaymentServiceProviderSEP.repository.PaymentMethodRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,11 +57,9 @@ public class PaymentMethodService {
         log.debug("Starting heartbeat round-robin");
 
         paymentMethodRepository.findNextForHeartbeat(PaymentMethodCode.CUSTOM)
-                .forEach(method -> {
-                    if(method.isPresent()){
-                    log.info("Selected payment method {} for heartbeat", method.get().getId());
-                    heartbeat(method.get());
-                    }
+                .ifPresent(method -> {
+                    log.info("Selected payment method {} for heartbeat", method.getId());
+                    heartbeat(method);
                 });
 
         log.debug("Completed heartbeat round-robin");
@@ -117,7 +113,7 @@ public class PaymentMethodService {
 
         String iconPath = request.getIconPath();
         paymentMethod.setIconPath(iconPath != null && !iconPath.trim().isEmpty() ? iconPath : null);
-        
+
         paymentMethod.setEnabled(request.getEnabled() != null ? request.getEnabled() : false);
         paymentMethod.setActive(request.getActive() != null ? request.getActive() : false);
 
@@ -134,15 +130,15 @@ public class PaymentMethodService {
                     pm.setHealthEndpoint(request.getStatusUrl());
                     pm.setPaymentEndpoint(request.getPaymentUrl());
                     pm.setPaymentMethodCode(resolvePaymentMethodCode(request.getPaymentMethodCode()));
-                    
+
                     // Set iconPath, convert empty string to null
                     String iconPath = request.getIconPath();
                     pm.setIconPath(iconPath != null && !iconPath.trim().isEmpty() ? iconPath : null);
-                    
+
                     if (request.getEnabled() != null) {
                         pm.setEnabled(request.getEnabled());
                     }
-                    
+
                     return mapToDTO(paymentMethodRepository.save(pm));
                 })
                 .orElse(null);

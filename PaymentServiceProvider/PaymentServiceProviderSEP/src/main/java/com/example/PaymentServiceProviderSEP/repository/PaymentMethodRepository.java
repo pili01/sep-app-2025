@@ -13,19 +13,20 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
     boolean existsByName(String name);
 
     Optional<PaymentMethod> findByName(String name);
-    
+
     Optional<PaymentMethod> findByPaymentMethodCode(PaymentMethodCode paymentMethodCode);
 
     @Query("""
-    SELECT pm
-    FROM PaymentMethod pm
-    WHERE pm.enabled = true
-      AND pm.paymentMethodCode = :code
-    ORDER BY
-        CASE WHEN pm.lastHeartbeat IS NULL THEN 0 ELSE 1 END,
-        pm.lastHeartbeat ASC
-""")
-    List<Optional<PaymentMethod>> findNextForHeartbeat(
+                SELECT pm
+                FROM PaymentMethod pm
+                WHERE pm.enabled = true
+                  AND pm.paymentMethodCode = :code
+                ORDER BY
+                    CASE WHEN pm.lastHeartbeat IS NULL THEN 0 ELSE 1 END ASC,
+                    pm.lastHeartbeat ASC
+                LIMIT 1
+            """)
+    Optional<PaymentMethod> findNextForHeartbeat(
             @Param("code") PaymentMethodCode code
     );
 
