@@ -1,0 +1,36 @@
+package com.example.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TransactionStatusResponse {
+    private String transactionId;
+    private String status;
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private BigDecimal amount;
+    
+    private String currency;
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private BigDecimal bitcoinAmount;
+    
+    private String bitcoinAddress;
+    private Integer confirmations;
+    private LocalDateTime createdAt;
+    private LocalDateTime completedAt;
+    private String errorMessage;
+    private String successUrl;
+    private String failedUrl;
+    private String errorUrl;
+}

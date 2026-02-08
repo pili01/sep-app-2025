@@ -1,0 +1,55 @@
+package com.example.Bank.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SoftDelete;
+
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Table()
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Account {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String accountHolderName;  // e.g., user first and last name
+
+    @Column(nullable = false)
+    private String merchantId;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column(nullable = false)
+    private String accountNumberEnc;
+
+    @Column(nullable = false)
+    private String accountNumberHash;
+
+    @Column(nullable = false)
+    private double balance;
+
+    @Column(nullable = false)
+    private String currency = "EUR";
+
+    @JsonIgnore
+    @ToString.Exclude
+    @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.LAZY)
+    private User user;
+
+    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Card> cards;
+}

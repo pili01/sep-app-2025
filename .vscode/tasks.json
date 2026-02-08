@@ -1,0 +1,132 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // =======================
+    // FRONTEND
+    // =======================
+    {
+      "label": "$(browser)🏦 Frontend › Bank › Start",
+      "type": "shell",
+      "command": "cd Bank/bank-fr; npx ng serve",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Frontend", "isDefault": true }
+    },
+    {
+      "label": "$(browser)💰 Frontend › PSP › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Frontend", "isDefault": true }
+    },
+    {
+      "label": "$(browser)🛒 Frontend › WS › Start",
+      "type": "shell",
+      "command": "cd WebShop/webshop-fr; npx ng serve",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Frontend", "isDefault": true }
+    },
+    {
+      "label": "🚀 Frontend › Run All",
+      "dependsOn": [
+        "$(browser)🏦 Frontend › Bank › Start",
+        "$(browser)💰 Frontend › PSP › Start",
+        "$(browser)🛒 Frontend › WS › Start"
+      ],
+      "detail": "Run all frontend apps",
+      "group": { "kind": "build", "name": "Frontend", "isDefault": true }
+    },
+
+    // =======================
+    // BACKEND
+    // =======================
+    {
+      "label": "$(server)🏦 Backend › Bank › Start",
+      "type": "shell",
+      "command": "cd Bank/Bank; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)💰0 Backend › PSP › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PaymentServiceProviderSEP; $env:SERVER_PORT='8440'; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)💰9 Backend › PSP › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PaymentServiceProviderSEP; $env:SERVER_PORT='8439'; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)💸 Backend › PayPal › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PSPpayPal; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)₿ Backend › Crypto › Start",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/PSPCrypto; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "$(server)🛒 Backend › WS › Start",
+      "type": "shell",
+      "command": "cd WebShop/WebShopSEP; ./mvnw spring-boot:run",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+    {
+      "label": "🥾 Backend › Run All",
+      "dependsOn": [
+        "$(server)🏦 Backend › Bank › Start",
+        "$(server)💰0 Backend › PSP › Start",
+        "$(server)💰9 Backend › PSP › Start",
+        "$(server)💸 Backend › PayPal › Start",
+        "$(server)₿ Backend › Crypto › Start",
+        "$(server)🛒 Backend › WS › Start"
+      ],
+      "detail": "Run all backend apps",
+      "group": { "kind": "build", "name": "Backend", "isDefault": true }
+    },
+
+    // =======================
+    // SETUP
+    // =======================
+    {
+      "label": "$(package) Setup › Bank › Install",
+      "type": "shell",
+      "command": "cd Bank/bank-fr; npm install",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Setup", "isDefault": false }
+    },
+    {
+      "label": "$(package) Setup › PSP › Install",
+      "type": "shell",
+      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npm install",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Setup", "isDefault": false }
+    },
+    {
+      "label": "$(package) Setup › WS › Install",
+      "type": "shell",
+      "command": "cd WebShop/webshop-fr; npm install",
+      "problemMatcher": [],
+      "group": { "kind": "build", "name": "Setup", "isDefault": false }
+    },
+    {
+      "label": "$(cloud-download) Setup › Install All",
+      "dependsOn": [
+        "$(package) Setup › Bank › Install",
+        "$(package) Setup › PSP › Install",
+        "$(package) Setup › WS › Install"
+      ],
+      "group": { "kind": "build", "name": "Setup", "isDefault": true }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+<div class="payment-container">
+  <div class="payment-card">
+    <h2>Payment Form</h2>
+    
+    <div *ngIf="isLoading" class="loading">
+      <p>Loading payment details...</p>
+    </div>
+    
+    <div *ngIf="errorMessage && !isLoading" class="error-message">
+      <p><strong>Error:</strong> {{ errorMessage }}</p>
+      <p>Payment ID: {{ paymentId }}</p>
+    </div>
+    
+  
+    <div *ngIf="paymentDetails" class="payment-info">
+      <div class="merchant-info">
+        <p><strong>Merchant ID:</strong> {{ paymentDetails.merchantId }}</p>
+        <p><strong>Amount:</strong> {{ paymentDetails.amount }} {{ paymentDetails.currency }}</p>
+      </div>
+      
+      <div class="timer" *ngIf="timeRemaining > 0">
+        <p>Time remaining: {{ formatTime(timeRemaining) }}</p>
+      </div>
+      
+      
+      <div *ngIf="paymentDetails.expired || paymentDetails.used || timeRemaining <= 0" class="alert alert-warning">
+        <p *ngIf="paymentDetails.expired">Payment session has expired</p>
+        <p *ngIf="paymentDetails.used">Payment has already been processed</p>
+        <p *ngIf="timeRemaining <= 0 && !paymentDetails.expired && !paymentDetails.used">Payment session has expired</p>
+      </div>
+    </div>
+
+    
+    <div class="card-logos" *ngIf="paymentDetails">
+      <img *ngFor="let type of paymentDetails.acceptedCardTypes" 
+           [src]="getCardLogoPath(type)" 
+           [alt]="type"
+           class="card-logo"
+           [class.active]="cardType === type">
+    </div>
+
+    
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" *ngIf="paymentDetails && !paymentDetails.expired && !paymentDetails.used && timeRemaining > 0">
+      <div class="form-group">
+        <label for="pan">Card Number</label>
+        <input 
+          type="text" 
+          id="pan" 
+          formControlName="pan"
+          placeholder="1234 5678 9012 3456"
+          maxlength="19"
+          [class.invalid]="paymentForm.get('pan')?.invalid && paymentForm.get('pan')?.touched">
+        <div class="error-message" *ngIf="paymentForm.get('pan')?.invalid && paymentForm.get('pan')?.touched">
+          <p *ngIf="paymentForm.get('pan')?.errors?.['required']">Card number is required</p>
+          <p *ngIf="paymentForm.get('pan')?.errors?.['invalidLuhn']">Invalid card number</p>
+        </div>
+      </div>
+
+      
+      <div class="form-group">
+        <label for="securityCode">Security Code (CVV)</label>
+        <input 
+          type="text" 
+          id="securityCode" 
+          formControlName="securityCode"
+          placeholder="123"
+          maxlength="4"
+          [class.invalid]="paymentForm.get('securityCode')?.invalid && paymentForm.get('securityCode')?.touched">
+        <div class="error-message" *ngIf="paymentForm.get('securityCode')?.invalid && paymentForm.get('securityCode')?.touched">
+          <p *ngIf="paymentForm.get('securityCode')?.errors?.['required']">Security code is required</p>
+          <p *ngIf="paymentForm.get('securityCode')?.errors?.['pattern']">Security code must be 3 or 4 digits</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="cardHolderName">Cardholder Name</label>
+        <input 
+          type="text" 
+          id="cardHolderName" 
+          formControlName="cardHolderName"
+          placeholder="Ratko Mladic"
+          [class.invalid]="paymentForm.get('cardHolderName')?.invalid && paymentForm.get('cardHolderName')?.touched">
+        <div class="error-message" *ngIf="paymentForm.get('cardHolderName')?.invalid && paymentForm.get('cardHolderName')?.touched">
+          <p *ngIf="paymentForm.get('cardHolderName')?.errors?.['required']">Cardholder name is required</p>
+          <p *ngIf="paymentForm.get('cardHolderName')?.errors?.['minlength']">Cardholder name must be at least 2 characters</p>
+        </div>
+      </div>
+
+   
+      <div class="form-group">
+        <label for="expirationDate">Expiration Date (MM/YY)</label>
+        <input 
+          type="text" 
+          id="expirationDate" 
+          formControlName="expirationDate"
+          placeholder="12/25"
+          maxlength="5"
+          [class.invalid]="paymentForm.get('expirationDate')?.invalid && paymentForm.get('expirationDate')?.touched">
+        <div class="error-message" *ngIf="paymentForm.get('expirationDate')?.invalid && paymentForm.get('expirationDate')?.touched">
+          <p *ngIf="paymentForm.get('expirationDate')?.errors?.['required']">Expiration date is required</p>
+          <p *ngIf="paymentForm.get('expirationDate')?.errors?.['invalidExpirationDate']">Invalid or expired date (MM/YY format)</p>
+        </div>
+      </div>
+
+    
+      <button 
+        type="submit" 
+        class="submit-btn"
+        [disabled]="paymentForm.invalid || isProcessing || timeRemaining <= 0">
+        <span *ngIf="!isProcessing">Pay {{ paymentDetails.amount }} {{ paymentDetails.currency }}</span>
+        <span *ngIf="isProcessing">Processing...</span>
+      </button>
+    </form>
+
+    <div *ngIf="paymentResult" class="payment-result" [class.success]="paymentResult.success" [class.error]="!paymentResult.success">
+      <p>{{ paymentResult.message }}</p>
+    </div>
+  </div>
+</div>
+

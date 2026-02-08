@@ -1,0 +1,81 @@
+<div class="crypto-payment-container">
+  @if(isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Učitavanje podataka o plaćanju...</p>
+    </div>
+  } @else if(error()) {
+    <div class="error-card">
+      <h2>Greška</h2>
+      <p>{{ error() }}</p>
+    </div>
+  } @else if(paymentData()) {
+    <div class="payment-card">
+      <div class="header">
+        <h1>₿ Bitcoin Payment</h1>
+        <div class="status-badge" [class]="'status-' + paymentData()!.status.toLowerCase()">
+          {{ paymentData()!.status }}
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-item">
+          <label>Iznos:</label>
+          <div class="value">{{ paymentData()!.amount }} {{ paymentData()!.currency }}</div>
+        </div>
+
+        <div class="info-item">
+          <label>Bitcoin Iznos:</label>
+          <div class="value bitcoin-amount">{{ paymentData()!.bitcoinAmount }} BTC</div>
+        </div>
+
+        <div class="info-item">
+          <label>Bitcoin Adresa (Pošaljite plaćanje na):</label>
+          <div class="bitcoin-address-container">
+            <div class="bitcoin-address" (click)="copyToClipboard(paymentData()!.bitcoinAddress)">
+              {{ paymentData()!.bitcoinAddress }}
+            </div>
+            <button class="copy-btn" (click)="copyToClipboard(paymentData()!.bitcoinAddress)">
+              Kopiraj
+            </button>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label>Potvrde:</label>
+          <div class="value">{{ paymentData()!.confirmations }} / {{ paymentData()!.confirmations >= 1 ? '1' : '1' }}</div>
+        </div>
+
+        <div class="info-item">
+          <label>Transaction ID:</label>
+          <div class="value transaction-id">{{ paymentData()!.transactionId }}</div>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h3>Kako da platite:</h3>
+        <ol>
+          <li>Otvorite svoj Bitcoin wallet (Electrum, Blockchain.info, itd.)</li>
+          <li>Pošaljite <strong>{{ paymentData()!.bitcoinAmount }} BTC</strong> na adresu iznad</li>
+          <li>Sačekajte potvrdu transakcije</li>
+          <li>Vaše plaćanje će biti automatski obrađeno</li>
+        </ol>
+      </div>
+
+      @if (paymentData()!.status === 'PENDING' || paymentData()!.status === 'PROCESSING') {
+        <div class="auto-refresh-info">
+          <p>🔄 Status se automatski osvežava svakih 30 sekundi...</p>
+        </div>
+      }
+
+      @if (paymentData()!.status === 'COMPLETED') {
+        <div class="success-message">
+          <h2>✅ Plaćanje je uspešno završeno!</h2>
+          <p>Transakcija je potvrđena na blockchain-u sa {{ paymentData()!.confirmations }} potvrda.</p>
+        </div>
+      }
+
+      <button class="refresh-button" (click)="refreshStatus()">Osveži Status</button>
+    </div>
+  }
+</div>

@@ -1,0 +1,78 @@
+<div class="add-sub-container">
+  @if (isLoading()) {
+    <div class="loading-spinner">
+      Checking available payment methods...
+    </div>
+  } @else {
+
+    @if (paymentMethods().length === 0) {
+      <div class="info-box">
+        This merchant is already subscribed to all available payment methods.
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-back" (click)="onCancel.emit()">
+          Back
+        </button>
+      </div>
+    } @else {
+
+      <form (ngSubmit)="onSubmit()">
+
+        <!-- PAYMENT METHOD SELECT -->
+        <div class="form-group">
+          <label>Select Payment Method</label>
+          <select
+            class="psp-input"
+            [(ngModel)]="selectedPaymentMethod"
+            name="paymentMethod"
+            [compareWith]="comparePaymentMethods"
+          >
+            @for (pm of paymentMethods(); track pm.id) {
+              <option [ngValue]="pm">
+                {{ pm.name }} ({{ pm.paymentMethodCode }})
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- BANK CARD ONLY -->
+        @if (selectedPaymentMethod.paymentMethodCode === 'BANK_CARD') {
+          <div class="form-group">
+            <label>Bank account number</label>
+            <input
+              type="text"
+              class="psp-input"
+              [(ngModel)]="selectedPaymentMethod.merchantAccountNumber"
+              name="merchantAccountNumber"
+              placeholder="1234 5678 9012 3456"
+            />
+          </div>
+        }
+
+        <!-- CONFIG JSON -->
+        <div class="form-group">
+          <label>Initial Configuration (JSON)</label>
+          <textarea
+            rows="5"
+            class="psp-input"
+            [(ngModel)]="selectedPaymentMethod.configJson"
+            name="configJson"
+            placeholder='{"key": "value"}'
+          ></textarea>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
+          <button type="button" class="btn-back" (click)="onCancel.emit()">
+            Back
+          </button>
+          <button type="submit" class="btn-save">
+            Create Subscription
+          </button>
+        </div>
+
+      </form>
+    }
+  }
+</div>

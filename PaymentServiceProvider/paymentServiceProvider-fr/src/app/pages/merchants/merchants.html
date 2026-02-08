@@ -1,0 +1,101 @@
+<div class="merchants-container">
+  <div class="header-row">
+    <h2>Merchant Managment</h2>
+    <button class="btn-primary" (click)="openAddModal()">+ New Merchant</button>
+  </div>
+
+  <div class="table-card">
+    <table class="psp-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th class="text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of merchants(); track m.id) {
+          <tr>
+            <td>{{ m.name }}</td>
+            <td><span class="status-pill" [attr.data-status]="m.status">{{ m.status }}</span></td>
+            <td class="text-right">
+              <button class="btn-subs" (click)="openSubscriptions(m)">Subscriptions</button>
+              <button class="btn-view" (click)="openDetails(m)">View Details</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (isModalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalTitle() }}</h3>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (modalMode() === 'ADD') {
+          <form (ngSubmit)="onCreate()">
+            <label>Merchant Name</label>
+            <input [(ngModel)]="newMerchant.name" name="name" required placeholder="e.g. My Online Store">
+            
+            <label>WebHook URL</label>
+            <input [(ngModel)]="newMerchant.webHookUrl" name="whUrl" required placeholder="https://example.com/webhook">
+            
+            <label>Success URL</label>
+            <input [(ngModel)]="newMerchant.successUrl" name="sUrl" required placeholder="https://example.com/success">
+            
+            <label>Failed URL</label>
+            <input [(ngModel)]="newMerchant.failedUrl" name="fUrl" required>
+            
+            <label>Error URL</label>
+            <input [(ngModel)]="newMerchant.errorUrl" name="eUrl" required>
+            
+            <button type="submit" class="save-btn">Create Merchant</button>
+          </form>
+        } 
+        @else if (modalMode() === 'SUBS') {
+          <app-merchant-subs [merchantId]="selectedMerchant().id" (onAddNew)="openAddSubscription()"></app-merchant-subs>
+        }    
+        @else if (modalMode() === 'ADD_SUB') {
+          <app-add-sub 
+            [merchantId]="selectedMerchant().id"
+            (onSaved)="modalMode.set('SUBS')"
+            (onCancel)="modalMode.set('SUBS')">
+          </app-add-sub>
+        } 
+        @else {
+          <div class="details-view">
+            <div class="detail-row">
+              <label>Public Merchant ID</label>
+              <div class="sensitive-box">
+                <input [type]="showSensitive() ? 'text' : 'password'" [value]="selectedMerchant().merchantId" readonly>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <label>API Password (Secret Key)</label>
+              <div class="sensitive-box">
+                <input [type]="showSensitive() ? 'text' : 'password'" [value]="selectedMerchant().merchantPassword" readonly>
+                <button class="btn-toggle" (click)="showSensitive.set(!showSensitive())">
+                  {{ showSensitive() ? 'Hide' : 'Show' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="url-summary">
+              <p><strong>WebHook:</strong> {{ selectedMerchant().webHookUrl }}</p>
+              <p><strong>Success:</strong> {{ selectedMerchant().successUrl }}</p>
+              <p><strong>Failed:</strong> {{ selectedMerchant().failedUrl }}</p>
+              <p><strong>Error:</strong> {{ selectedMerchant().errorUrl }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

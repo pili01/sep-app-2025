@@ -1,0 +1,93 @@
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PaymentService } from '../../service/payment.service';
+import { MerchantService } from '../../service/merchants.service';
+import { Subscription } from '../../models/payment_method.model';
+import { environment } from '../../../environments/environment';
+
+@Component({
+  selector: 'app-payment',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './payment.component.html',
+  styleUrl: './payment.component.scss',
+})
+export class PaymentComponent implements OnInit {
+  merchantId!: number;
+  transactionId: string | null = null;
+  isLoading = signal(false);
+  isProcessing = signal(false);
+  paymentMethods = signal<Subscription[]>([]);
+
+  constructor(
+    private route: ActivatedRoute,
+    private paymentService: PaymentService,
+    private router: Router,
+    private merchantService: MerchantService,
+  ) {}
+
+  ngOnInit(): void {
+    const merchantIdParam = this.route.snapshot.paramMap.get('merchantId');
+
+    if (!merchantIdParam || isNaN(Number(merchantIdParam))) {
+      console.error('Invalid merchantId in route');
+      return;
+    }
+
+    this.merchantId = Number(merchantIdParam);
+    this.transactionId = this.route.snapshot.queryParamMap.get('transactionId');
+
+    this.loadAvailablePaymentMethods();
+  }
+
+  loadAvailablePaymentMethods(): void {
+    this.isLoading.set(true);
+    this.merchantService.getSubscriptions(this.merchantId).subscribe({
+      next: (response) => {
+        this.paymentMethods.set(response.filter((sub) => sub.enabled));
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        this.isLoading.set(false);
+        console.error('Error loading payment methods:', error);
+      },
+    });
+  }
+
+  selectedPaymentMethod(sub: Subscription): void {
+    this.isProcessing.set(true);
+    this.paymentService.initiatePayment(this.transactionId!, sub.id).subscribe({
+      next: (response) => {
+        if (response.paymentUrl) {
+          window.location.href = response.paymentUrl;
+        } else {
+          this.isProcessing.set(false);
+          alert('Payment URL not found in response');
+        }
+      },
+      error: (error) => {
+        this.isProcessing.set(false);
+        alert('Error initiating payment: ' + error.message);
+      },
+    });
+  }
+
+  getIconUrl(iconPath: string | null | undefined): string {
+    if (!iconPath) {
+      return '';
+    }
+    return `${environment.iconBaseUrl}/payment-methods/icon/${iconPath}`;
+  }
+
+  getMethodCodeLabel(code: string): string {
+    const codeMap: { [key: string]: string } = {
+      BANK_CARD: 'Bankarska kartica',
+      PAYPAL: 'PayPal',
+      CRYPTO: 'Kriptovalute',
+      BANK_TRANSFER: 'Bankovni transfer',
+      CUSTOM: 'Drugi načini',
+    };
+    return codeMap[code] || code;
+  }
+}

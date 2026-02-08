@@ -1,0 +1,16 @@
+<div class="qr-code-container">
+  <h1 class="title">Skenirajte QR kod za plaćanje</h1>
+  
+  <div class="qr-code-wrapper" *ngIf="!loading() && !error()">
+    <img [src]="qrCodeUrl()" alt="QR kod za plaćanje" class="qr-code-image" />
+    <button class="download-btn" (click)="downloadQrCode()">Preuzmi QR kod</button>
+  </div>
+  
+  <div class="loading" *ngIf="loading()">
+    <p>Učitavanje QR koda...</p>
+  </div>
+  
+  <div class="error" *ngIf="error()">
+    <p>{{ error() }}</p>
+  </div>
+</div>
