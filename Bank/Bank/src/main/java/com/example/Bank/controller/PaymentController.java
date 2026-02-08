@@ -36,7 +36,7 @@ public class PaymentController {
     public ResponseEntity<?> createTestTransaction() {
         var transaction = paymentService.createTestTransaction();
         return ResponseEntity.ok("Test transaction created. PaymentId: " + transaction.getPaymentId() +
-                "\nPayment URL: https://localhost:4203/payment/" + transaction.getPaymentId());
+                "\nPayment URL: https://lap-ter-dp:4203/payment/" + transaction.getPaymentId());
     }
 
 

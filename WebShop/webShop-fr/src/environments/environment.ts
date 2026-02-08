@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:8441',
-  apiBaseUrl: 'https://localhost:8441/api',
+  apiUrl: 'https://DESKTOP-FEN4DUP:8441',
+  apiBaseUrl: 'https://DESKTOP-FEN4DUP:8441/api',
 };

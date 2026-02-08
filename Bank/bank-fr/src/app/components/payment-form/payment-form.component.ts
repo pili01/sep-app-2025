@@ -4,7 +4,11 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../services/payment.service';
 import { CardValidationService } from '../../services/card-validation.service';
-import { PaymentDetailsResponse, PaymentProcessRequest, CardType } from '../../models/payment.models';
+import {
+  PaymentDetailsResponse,
+  PaymentProcessRequest,
+  CardType,
+} from '../../models/payment.models';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -12,7 +16,7 @@ import { interval, Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './payment-form.component.html',
-  styleUrls: ['./payment-form.component.scss']
+  styleUrls: ['./payment-form.component.scss'],
 })
 export class PaymentFormComponent implements OnInit, OnDestroy {
   paymentForm: FormGroup;
@@ -32,36 +36,36 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
     private router: Router,
     private paymentService: PaymentService,
     private cardValidationService: CardValidationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.paymentForm = this.fb.group({
       pan: ['', [Validators.required, this.luhnValidator.bind(this)]],
       securityCode: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
       cardHolderName: ['', [Validators.required, Validators.minLength(2)]],
-      expirationDate: ['', [Validators.required, this.expirationDateValidator.bind(this)]]
+      expirationDate: ['', [Validators.required, this.expirationDateValidator.bind(this)]],
     });
   }
 
   ngOnInit(): void {
     this.paymentId = this.route.snapshot.paramMap.get('paymentId') || '';
-    
+
     if (!this.paymentId) {
       this.router.navigate(['/']);
       return;
     }
 
     this.loadPaymentDetails();
-    
-    this.paymentForm.get('pan')?.valueChanges.subscribe(pan => {
+
+    this.paymentForm.get('pan')?.valueChanges.subscribe((pan) => {
       this.cardType = this.cardValidationService.detectCardType(pan);
-      
+
       const formatted = this.cardValidationService.formatCardNumber(pan);
       if (formatted !== pan) {
         this.paymentForm.get('pan')?.setValue(formatted, { emitEvent: false });
       }
     });
-    
-    this.paymentForm.get('expirationDate')?.valueChanges.subscribe(value => {
+
+    this.paymentForm.get('expirationDate')?.valueChanges.subscribe((value) => {
       const digits = value.replace(/\D/g, '');
       if (digits.length <= 4) {
         let formatted = digits;
@@ -82,12 +86,12 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
   loadPaymentDetails(): void {
     this.isLoading = true;
     this.errorMessage = null;
-    
+
     this.paymentService.getPaymentDetails(this.paymentId).subscribe({
       next: (details) => {
         this.isLoading = false;
         this.paymentDetails = details;
-        
+
         if (details.expired || details.used) {
           this.paymentForm.disable();
           if (details.expired) {
@@ -97,7 +101,7 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
           }
           return;
         }
-        
+
         this.startTimer(details.expiresAt);
         this.cdr.detectChanges();
         this.cdr.detectChanges();
@@ -108,7 +112,8 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
         console.error('Full error object:', JSON.stringify(err, null, 2));
         let errorMsg = 'Failed to load payment details';
         if (err.status === 0) {
-          errorMsg = 'Cannot connect to backend. Make sure the backend is running on https://localhost:8443';
+          errorMsg =
+            'Cannot connect to backend. Make sure the backend is running on https://lap-ter-dp:8443';
         } else if (err.status === 404) {
           errorMsg = `Payment transaction with ID "${this.paymentId}" not found. Please create a test transaction first.`;
         } else if (err.error?.message) {
@@ -116,10 +121,10 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
         } else if (err.message) {
           errorMsg = err.message;
         }
-        
+
         this.errorMessage = errorMsg;
         this.paymentResult = { success: false, message: errorMsg };
-      }
+      },
     });
   }
 
@@ -128,7 +133,7 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
     const updateTimer = () => {
       const now = new Date();
       const diff = Math.floor((expiry.getTime() - now.getTime()) / 1000);
-      
+
       if (diff <= 0) {
         this.timeRemaining = 0;
         this.paymentForm.disable();
@@ -140,7 +145,7 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     };
-    
+
     updateTimer();
     this.timerSubscription = interval(1000).subscribe(() => updateTimer());
   }
@@ -176,22 +181,22 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
       pan: formValue.pan.replace(/\s/g, ''),
       securityCode: formValue.securityCode,
       cardHolderName: formValue.cardHolderName,
-      expirationDate: formValue.expirationDate
+      expirationDate: formValue.expirationDate,
     };
 
     this.paymentService.processPayment(this.paymentId, request).subscribe({
       next: (response) => {
         this.isProcessing = false;
-        
+
         this.paymentResult = {
           success: response.success,
-          message: response.message
+          message: response.message,
         };
-        
+
         if (response.success) {
           this.paymentForm.disable();
         }
-        
+
         // Redirektujem korisnika na WebShop status stranicu ako postoji redirectUrl
         if (response.redirectUrl) {
           window.location.href = response.redirectUrl;
@@ -199,17 +204,17 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isProcessing = false;
-        
+
         this.paymentResult = {
           success: false,
-          message: err.error?.message || 'Payment processing failed'
+          message: err.error?.message || 'Payment processing failed',
         };
-        
+
         // Čak i u slučaju greške, proveravam da li postoji redirectUrl (za FAILED slučajeve)
         if (err.error?.redirectUrl) {
           window.location.href = err.error.redirectUrl;
         }
-      }
+      },
     });
   }
 
@@ -219,4 +224,3 @@ export class PaymentFormComponent implements OnInit, OnDestroy {
     return `/assets/card-logos/${type.toLowerCase()}.svg`;
   }
 }
-

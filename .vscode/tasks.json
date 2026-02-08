@@ -7,21 +7,21 @@
     {
       "label": "$(browser)🏦 Frontend › Bank › Start",
       "type": "shell",
-      "command": "cd Bank/bank-fr; npx ng serve",
+      "command": "cd Bank/bank-fr; npx ng serve --host 0.0.0.0 --allowed-hosts=all",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },
     {
       "label": "$(browser)💰 Frontend › PSP › Start",
       "type": "shell",
-      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve",
+      "command": "cd PaymentServiceProvider/paymentServiceProvider-fr; npx ng serve --host 0.0.0.0 --allowed-hosts=all",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },
     {
       "label": "$(browser)🛒 Frontend › WS › Start",
       "type": "shell",
-      "command": "cd WebShop/webshop-fr; npx ng serve",
+      "command": "cd WebShop/webshop-fr; npx ng serve --host 0.0.0.0 --allowed-hosts=all",
       "problemMatcher": [],
       "group": { "kind": "build", "name": "Frontend", "isDefault": true }
     },

@@ -10,7 +10,8 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @ConfigurationProperties(prefix = "")
 @PropertySource("classpath:secrets.properties")
-@Getter @Setter
+@Getter
+@Setter
 public class ConfigProperties {
 
     @Value("${psp.core.api.url}")
@@ -31,6 +32,6 @@ public class ConfigProperties {
     @Value("${blockstream.api.url:https://blockstream.info/testnet/api}")
     private String blockstreamApiUrl;
 
-    @Value("${psp.frontend.url:https://localhost:4202}")
+    @Value("${psp.frontend.url:https://lap-ter-dp:4202}")
     private String pspFrontendUrl;
 }
